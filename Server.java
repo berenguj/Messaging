@@ -17,6 +17,7 @@ public class Server {
         boolean validResponse = false;
         Object validResponseObject;
         Object recipientObject;
+        Object response1Object;
         String response1; //String addChat;
         String response2; //String secondAddChat;
         String[] chatReturn;
@@ -73,14 +74,20 @@ public class Server {
                 //consider all possible cases like adding then chatting, or invalid responses, etc
                 String recipient = null;
                 response1 = dataInputStream.readUTF();
-                responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
+                //responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
                 while (!validResponse) {
 
                     responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
-                    validResponseObject = responseHandlerReturn.get(1);
+                    validResponseObject = responseHandlerReturn.get(2);
                     validResponse = (boolean) validResponseObject;
                     recipientObject = responseHandlerReturn.get(0);
                     recipient = (String) recipientObject;
+                    response1Object = responseHandlerReturn.get(1);
+                    response1 = (String) response1Object;
+
+                    System.out.println("validResponse: " + validResponse);
+                    System.out.println("response1: " + response1);
+                    System.out.println("recipient: " + recipient);
                     /*if (response1.equals("ADD")) {
                         response2 = server.ADD(dataOutputStream, dataInputStream, name);
                         if (response2.equals("ADD")) {
@@ -162,7 +169,7 @@ public class Server {
         writer.flush();
         writer.close();
 
-        dataOutputStream.writeUTF("Okay! " + friend + " was added! Would you like to add another friend or start chatting with current friends?");
+        dataOutputStream.writeUTF("Okay! " + friend + " was added! Would you like to add another friend or start chatting with current friends? [ADD | CHAT]");
         String response1 = dataInputStream.readUTF();
 
         return response1;
@@ -221,7 +228,8 @@ public class Server {
         String[] chatReturn;
         Vector<Object> responseHandlerReturn = new Vector<>();
         //0: recipient
-        //1: validresponse
+        //1: response1
+        //2: validresponse
 
         if (response1.equals("ADD")) {
             response2 = server.ADD(dataOutputStream, dataInputStream, name);
@@ -263,7 +271,9 @@ public class Server {
             validResponse = false;
         }
 
-        responseHandlerReturn.add(1, validResponse);
+        responseHandlerReturn.add(0, recipient);
+        responseHandlerReturn.add(1, response1);
+        responseHandlerReturn.add(2, validResponse);
 
         return responseHandlerReturn;
 
