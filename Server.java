@@ -14,12 +14,15 @@ public class Server {
         //variables
         Server server = new Server();
         boolean existingUser = false;
+        boolean correctPassword = false;
         boolean validResponse = false;
         Object validResponseObject;
         Object recipientObject;
         Object response1Object;
         String response1; //String addChat;
         String response2; //String secondAddChat;
+        String signupORlogin;
+        String name = null;
         String[] chatReturn;
         Vector<Object> responseHandlerReturn = new Vector<>();
 
@@ -41,32 +44,96 @@ public class Server {
                 DataOutputStream dataOutputStream = new DataOutputStream(s.getOutputStream());
 
                 //ask for username from client and add them to the user list
-                dataOutputStream.writeUTF("If you don't have an account yet, please type in a username you'd like. To log in please type in your existing username: ");
-                String name = dataInputStream.readUTF();
+                dataOutputStream.writeUTF("Would you like to sign up for an account or login to an existing account?:  [SIGN UP | LOGIN]");
+                signupORlogin = dataInputStream.readUTF();
+
+                while(!validResponse){
+                    if(signupORlogin.equals("SIGN UP")){
+                        dataOutputStream.writeUTF("Please type in the username you would like: ");
+                        name = dataInputStream.readUTF();
+                        validResponse = true;
+                    }
+                    else if(signupORlogin.equals("LOGIN")){
+                        dataOutputStream.writeUTF("Please type in your username: ");
+                        name = dataInputStream.readUTF();
+                        validResponse = true;
+                    }
+                    else{
+                        dataOutputStream.writeUTF("Please enter a valid response [SIGN UP | LOGIN]");
+                        signupORlogin = dataInputStream.readUTF();
+                    }
+                }
+                //reset for next while loop
+                validResponse = false;
 
                 //check if they are an existing user
-                BufferedReader reader = new BufferedReader(new FileReader("users.txt"));
+                BufferedReader reader1 = new BufferedReader(new FileReader("users.txt"));
                 String line = null;
-                while ((line = reader.readLine()) != null) {
+                line = reader1.readLine();
+                while ((line = reader1.readLine()) != null) {
                     if (name.equals(line)) {
                         existingUser = true;
-                    } else {
+                    }
+                    else {
                         existingUser = false;
                     }
                 }
+                line = null;
 
                 //login an existing user
                 if (existingUser) {
-                    dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+                    dataOutputStream.writeUTF("Welcome back " + name + "!" + " Please type in your password: ");
+                    String password = dataInputStream.readUTF();
+                    //dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+
+                    BufferedReader reader2 = new BufferedReader(new FileReader(name + ".txt")); //password will be the very first line of their text file followed by their friends list
+                    for(int i = 0; i < 2; i++){
+                        line = reader2.readLine();
+                        if (password.equals(line)) {
+                            correctPassword = true;
+                        } else {
+                            correctPassword = false;
+                        }
+                    }
+
+                    while(!correctPassword){
+                        dataOutputStream.writeUTF("Incorrect password. Please try again: ");
+                        password = dataInputStream.readUTF();
+                        BufferedReader reader3 = new BufferedReader(new FileReader(name + ".txt"));
+                        for(int i = 0; i < 2; i++){
+                            line = reader3.readLine();
+                            if (password.equals(line)) {
+                                correctPassword = true;
+                            } else {
+                                correctPassword = false;
+                            }
+                        }
+                    }
+                    dataOutputStream.writeUTF("You are now logged in! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+
+                    /*if(correctPassword){
+                        dataOutputStream.writeUTF("You are now logged in! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+                    }
+                    else{
+                        dataOutputStream.writeUTF("Incorrect password. Please try again: ");
+                    }*/
                 }
 
                 //add the new user to the user list and log them in
                 else if (!existingUser) {
-                    PrintWriter writer = new PrintWriter(new FileWriter("users.txt", true));
-                    writer.write("\n");
-                    writer.write(name);
-                    writer.flush();
-                    writer.close();
+                    BufferedWriter writer1 = new BufferedWriter(new FileWriter("users.txt", true));
+                    writer1.write(name);
+                    writer1.newLine();
+                    writer1.flush();
+                    writer1.close();
+                    dataOutputStream.writeUTF("Your username is set! Please type in a password: ");
+                    String password = dataInputStream.readUTF();
+
+                    PrintWriter writer2 = new PrintWriter(new FileWriter(name + ".txt", true));
+                    writer2.write("\n");
+                    writer2.write(password);
+                    writer2.flush();
+                    writer2.close();
                     dataOutputStream.writeUTF("You are now signed up! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
                 }
 
@@ -77,7 +144,7 @@ public class Server {
                 //responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
                 while (!validResponse) {
 
-                    responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
+                    responseHandlerReturn = server.ResponseHandler2(dataOutputStream, dataInputStream, name, server, response1);
                     validResponseObject = responseHandlerReturn.get(2);
                     validResponse = (boolean) validResponseObject;
                     recipientObject = responseHandlerReturn.get(0);
@@ -161,16 +228,39 @@ public class Server {
     }
 
     public String ADD(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name) throws IOException {
+        boolean validUser = false;
+        String response1 = null;
         dataOutputStream.writeUTF("Please type the friend you would like to add");
         String friend = dataInputStream.readUTF();
-        PrintWriter writer = new PrintWriter(new FileWriter(name + ".txt", true));
+
+        BufferedReader reader = new BufferedReader(new FileReader("users.txt"));
+        String line = reader.readLine();
+        while (line != null) {
+            if(friend.equals(line)){
+                validUser = true;
+                PrintWriter writer = new PrintWriter(new FileWriter(name + ".txt", true));
+                writer.write("\n");
+                writer.write(friend);
+                writer.flush();
+                writer.close();
+                dataOutputStream.writeUTF("Okay! " + friend + " was added! Would you like to add another friend or start chatting with current friends? [ADD | CHAT]");
+                response1 = dataInputStream.readUTF();
+                break;
+            }
+            line = reader.readLine();
+        }
+        if(!validUser){
+            dataOutputStream.writeUTF("Sorry, they don't have an account. Would you like to try adding again or start chatting? [ADD | CHAT]");
+            response1 = dataInputStream.readUTF();
+        }
+        /*PrintWriter writer = new PrintWriter(new FileWriter(name + ".txt", true));
         writer.write("\n");
         writer.write(friend);
         writer.flush();
         writer.close();
 
         dataOutputStream.writeUTF("Okay! " + friend + " was added! Would you like to add another friend or start chatting with current friends? [ADD | CHAT]");
-        String response1 = dataInputStream.readUTF();
+        response1 = dataInputStream.readUTF();*/
 
         return response1;
     }
@@ -184,7 +274,8 @@ public class Server {
         System.out.println("name: " + name);
         System.out.println("filename: " + name + ".txt");
         BufferedReader reader1 = new BufferedReader(new FileReader(filename));
-        String line = null;
+        String line = reader1.readLine(); //skip two lines so it doesn't show the password
+        line = reader1.readLine();
         dataOutputStream.writeUTF("Here is your friends list: \n");
         while ((line = reader1.readLine()) != null) {
             dataOutputStream.writeUTF(line);
@@ -220,7 +311,7 @@ public class Server {
         return array;
     }
 
-    public Vector ResponseHandler(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Server server, String response1) throws IOException {
+    public Vector ResponseHandler2(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Server server, String response1) throws IOException {
 
         String recipient = null;
         String response2 = null;
