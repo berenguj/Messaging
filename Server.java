@@ -1,3 +1,4 @@
+import java.lang.reflect.Array;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -23,8 +24,10 @@ public class Server {
         String response2; //String secondAddChat;
         String signupORlogin;
         String name = null;
+        String recipient = null;
         String[] chatReturn;
         Vector<Object> responseHandlerReturn = new Vector<>();
+        Vector<String> alreadychatting = new Vector<String>();
 
         //server listening on port 5056
         ServerSocket serverSocket = new ServerSocket(5056);
@@ -74,9 +77,6 @@ public class Server {
                     if (name.equals(line)) {
                         existingUser = true;
                     }
-                    else {
-                        existingUser = false;
-                    }
                 }
                 line = null;
 
@@ -111,12 +111,13 @@ public class Server {
                     }
                     dataOutputStream.writeUTF("You are now logged in! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
 
-                    /*if(correctPassword){
-                        dataOutputStream.writeUTF("You are now logged in! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
-                    }
-                    else{
-                        dataOutputStream.writeUTF("Incorrect password. Please try again: ");
-                    }*/
+                    //add them to the online users file list
+                    BufferedWriter writer = new BufferedWriter(new FileWriter("onlineusers.txt", false));
+                    writer.write(name);
+                    writer.newLine();
+                    writer.flush();
+                    writer.close();
+
                 }
 
                 //add the new user to the user list and log them in
@@ -139,12 +140,11 @@ public class Server {
 
                 //based on response from user, ask if they would like to add a friend or chat with someone
                 //consider all possible cases like adding then chatting, or invalid responses, etc
-                String recipient = null;
                 response1 = dataInputStream.readUTF();
                 //responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
                 while (!validResponse) {
 
-                    responseHandlerReturn = server.ResponseHandler2(dataOutputStream, dataInputStream, name, server, response1);
+                    responseHandlerReturn = server.ResponseHandler2(dataOutputStream, dataInputStream, name, server, response1, alreadychatting);
                     validResponseObject = responseHandlerReturn.get(2);
                     validResponse = (boolean) validResponseObject;
                     recipientObject = responseHandlerReturn.get(0);
@@ -152,47 +152,6 @@ public class Server {
                     response1Object = responseHandlerReturn.get(1);
                     response1 = (String) response1Object;
 
-                    System.out.println("validResponse: " + validResponse);
-                    System.out.println("response1: " + response1);
-                    System.out.println("recipient: " + recipient);
-                    /*if (response1.equals("ADD")) {
-                        response2 = server.ADD(dataOutputStream, dataInputStream, name);
-                        if (response2.equals("ADD")) {
-                            response1 = response2;
-                            validResponse = false;
-                        } else if (response2.equals("CHAT")) {
-                            response1 = response2;
-                            validResponse = false;
-                        } else {
-                            dataOutputStream.writeUTF("please enter a valid response [ADD | CHAT]");
-                            response1 = dataInputStream.readUTF();
-                            validResponse = false;
-                        }
-                    } else if (response1.equals("CHAT")) {
-                        chatReturn = server.CHAT(dataOutputStream, dataInputStream, name);
-                        response2 = chatReturn[1];
-                        if (response2.equals("ADD")) {
-                            response1 = response2;
-                            validResponse = false;
-                        } else if (response2.equals("CHAT")) {
-                            response1 = response2;
-                            validResponse = true; //not sure if this is right yet
-                        } else if (response2.equals("CHATDISP")) {
-                            response1 = "CHAT";
-                            validResponse = false;
-                        } else {
-                            dataOutputStream.writeUTF("please enter a valid response [ADD | CHAT]");
-                            response1 = dataInputStream.readUTF();
-                            validResponse = false;
-                        }
-
-                        recipient = chatReturn[0];
-                        //validResponse = true;
-                    } else {
-                        dataOutputStream.writeUTF("please enter a valid response [ADD | CHAT]");
-                        response1 = dataInputStream.readUTF();
-                        validResponse = false;
-                    }*/
                 }
                 validResponse = false;
 
@@ -265,11 +224,17 @@ public class Server {
         return response1;
     }
 
-    public String[] CHAT(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name) throws IOException {
+    public String[] CHAT(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Vector alreadychatting) throws IOException {
         String[] array = new String[2];
         String recipient; //0 in array
         String response1 = "CHAT"; //1 in array
         String filename = name + ".txt";
+        int chattingnowcount = 0;
+        int counter1 = 0;
+        int counter2 = 0;
+        //alreadychatting vector:
+        //set up: have pairs of people talking to each other right next to each other
+        //ie: Jada Andler Nanu Ina means Jada and Andler are chatting and Nanu and Ina are chatting
 
         System.out.println("name: " + name);
         System.out.println("filename: " + name + ".txt");
@@ -282,36 +247,71 @@ public class Server {
         }
         dataOutputStream.writeUTF("Who would you like to chat with?");
         recipient = dataInputStream.readUTF();
-        System.out.println(recipient);
-        int counter = 0;
+
+        //check if they are friends with them
         BufferedReader reader2 = new BufferedReader(new FileReader(filename));
         line = reader2.readLine();
-
         while (line != null) {
             line = line.replaceAll("\\s+", "");
             if (recipient.equals(line)) { //friend is in the list
-                counter++;
+                counter1++;
             }
             line = reader2.readLine();
         }
-        System.out.println(counter);
-        if (counter == 0) { //counter didn't increase
+        //check if they are already chatting with someone
+        for(int i = 0; i < alreadychatting.size(); i++){
+            if(alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient)){
+                counter2++;
+            }
+            else if(alreadychatting.get(i++).equals(name) || alreadychatting.get(i++).equals(recipient)){
+                counter2++;
+            }
+            i+=2;
+        }
+
+        if (counter1 == 0) { //counter didn't increase
             dataOutputStream.writeUTF("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT]");
             response1 = dataInputStream.readUTF();
             if (response1.equals("CHAT")) {
                 response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
             }
-        } else {
+        }
+        else if(counter2 != 0){ //they are already chatting with someone
+            dataOutputStream.writeUTF("Sorry they are already chatting with another friend! Did you want to choose another friend to chat with or add a new friend? [ADD | CHAT]");
+            response1 = dataInputStream.readUTF();
+            if (response1.equals("CHAT")) {
+                response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
+            }
+        }
+        else {
             response1 = "CHAT";
             dataOutputStream.writeUTF("Okay! Go ahead and start sending messages to " + recipient);
+
+            //check if they are already chatting with someone
+            for(int i = 0; i < alreadychatting.size(); i++){
+                if(alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient)){
+                    counter2++;
+                }
+                else if(alreadychatting.get(i++).equals(name) || alreadychatting.get(i++).equals(recipient)){
+                    counter2++;
+                }
+                i+=2;
+            }
+
+            //add them to the already chatting vector
+            alreadychatting.add(name);
+            alreadychatting.add(recipient);
         }
+
         array[0] = recipient;
         array[1] = response1;
+        counter1 = 0;
+        counter2 = 0;
 
         return array;
     }
 
-    public Vector ResponseHandler2(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Server server, String response1) throws IOException {
+    public Vector ResponseHandler2(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Server server, String response1, Vector alreadychatting) throws IOException {
 
         String recipient = null;
         String response2 = null;
@@ -336,7 +336,7 @@ public class Server {
                 validResponse = false;
             }
         } else if (response1.equals("CHAT")) {
-            chatReturn = server.CHAT(dataOutputStream, dataInputStream, name);
+            chatReturn = server.CHAT(dataOutputStream, dataInputStream, name, alreadychatting);
             response2 = chatReturn[1];
             if (response2.equals("ADD")) {
                 response1 = response2;
@@ -433,4 +433,6 @@ public class Server {
             }
         }
     }
+
+
 }
