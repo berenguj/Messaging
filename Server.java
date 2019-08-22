@@ -245,9 +245,10 @@ public class Server {
         while ((line = reader1.readLine()) != null) {
             dataOutputStream.writeUTF(line);
         }
+        dataOutputStream.writeUTF("already chatting before: " +alreadychatting);
+        dataOutputStream.writeUTF("already chtting size: " +alreadychatting.size());
         dataOutputStream.writeUTF("Who would you like to chat with?");
         recipient = dataInputStream.readUTF();
-
         //check if they are friends with them
         BufferedReader reader2 = new BufferedReader(new FileReader(filename));
         line = reader2.readLine();
@@ -258,16 +259,28 @@ public class Server {
             }
             line = reader2.readLine();
         }
-        //check if they are already chatting with someone
+        dataOutputStream.writeUTF("i can get here 1");
+        //check if they are already chatting with someone or chose to already chat with you
         for(int i = 0; i < alreadychatting.size(); i++){
-            if(alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient)){
-                counter2++;
+            dataOutputStream.writeUTF("i can get here 2");
+            dataOutputStream.writeUTF("already chatting get i: " +alreadychatting.get(i));
+            dataOutputStream.writeUTF("already chatting get i+1: " +alreadychatting.get(i+1));
+            /*if((alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient)) && (alreadychatting.get(i+1).equals(name) || alreadychatting.get(i+1).equals(recipient))){
+                counter2+=2;
+                dataOutputStream.writeUTF("i can get here 3");
+            }*/
+            if((alreadychatting.get(i).equals(name) && alreadychatting.get(i+1).equals(recipient)) || (alreadychatting.get(i).equals(recipient) && alreadychatting.get(i+1).equals(name))){
+                counter2+=2;
+                dataOutputStream.writeUTF("i can get here 3");
             }
-            else if(alreadychatting.get(i++).equals(name) || alreadychatting.get(i++).equals(recipient)){
+            else if(alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient) || alreadychatting.get(i+1).equals(name) || alreadychatting.get(i+1).equals(recipient)){
                 counter2++;
+                dataOutputStream.writeUTF("i can get here 4");
             }
             i+=2;
         }
+
+        dataOutputStream.writeUTF("counter2: " +counter2);
 
         if (counter1 == 0) { //counter didn't increase
             dataOutputStream.writeUTF("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT]");
@@ -276,19 +289,19 @@ public class Server {
                 response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
             }
         }
-        else if(counter2 != 0){ //they are already chatting with someone
+        else if(counter2 == 1){ //they are already chatting with someone
             dataOutputStream.writeUTF("Sorry they are already chatting with another friend! Did you want to choose another friend to chat with or add a new friend? [ADD | CHAT]");
             response1 = dataInputStream.readUTF();
             if (response1.equals("CHAT")) {
                 response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
             }
         }
-        else {
+        else if(counter2 == 2 || counter2 == 0){
             response1 = "CHAT";
             dataOutputStream.writeUTF("Okay! Go ahead and start sending messages to " + recipient);
 
             //check if they are already chatting with someone
-            for(int i = 0; i < alreadychatting.size(); i++){
+            /*for(int i = 0; i < alreadychatting.size(); i++){
                 if(alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient)){
                     counter2++;
                 }
@@ -296,11 +309,15 @@ public class Server {
                     counter2++;
                 }
                 i+=2;
-            }
+            }*/
 
             //add them to the already chatting vector
-            alreadychatting.add(name);
-            alreadychatting.add(recipient);
+            if(counter2 == 0){
+                alreadychatting.add(name);
+                alreadychatting.add(recipient);
+            }
+
+            dataOutputStream.writeUTF("already chatting after: " +alreadychatting);
         }
 
         array[0] = recipient;
