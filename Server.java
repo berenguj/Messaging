@@ -28,6 +28,7 @@ public class Server {
         String[] chatReturn;
         Vector<Object> responseHandlerReturn = new Vector<>();
         Vector<String> alreadychatting = new Vector<String>();
+        Vector<String> onlineusers = new Vector<>();
 
         //server listening on port 5056
         ServerSocket serverSocket = new ServerSocket(5056);
@@ -79,9 +80,19 @@ public class Server {
                     }
                 }
                 line = null;
+                System.out.println("existing user:" +existingUser);
 
                 //login an existing user
                 if (existingUser) {
+
+                    dataOutputStream.writeUTF("oneline users before: " +onlineusers);
+                    for(int i = 0; i < onlineusers.size(); i++){
+                        if(onlineusers.get(i).equals(name)){
+                            dataOutputStream.writeUTF("Sorry you are already logged on! Please use the other window instead.");
+                            System.exit(10);
+                        }
+                    }
+
                     dataOutputStream.writeUTF("Welcome back " + name + "!" + " Please type in your password: ");
                     String password = dataInputStream.readUTF();
                     //dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
@@ -109,7 +120,9 @@ public class Server {
                             }
                         }
                     }
+
                     dataOutputStream.writeUTF("You are now logged in! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+
 
                     //add them to the online users file list
                     BufferedWriter writer = new BufferedWriter(new FileWriter("onlineusers.txt", false));
@@ -229,6 +242,7 @@ public class Server {
         String recipient; //0 in array
         String response1 = "CHAT"; //1 in array
         String filename = name + ".txt";
+        boolean validResponse = false;
         int chattingnowcount = 0;
         int counter1 = 0;
         int counter2 = 0;
@@ -290,11 +304,34 @@ public class Server {
             }
         }
         else if(counter2 == 1){ //they are already chatting with someone
-            dataOutputStream.writeUTF("Sorry they are already chatting with another friend! Did you want to choose another friend to chat with or add a new friend? [ADD | CHAT]");
+            dataOutputStream.writeUTF("Sorry they are already chatting with another friend!" +
+                    "Did you want to send them messages that they can view later? [CHAT WITH THEM | CHAT WITH SOMEONE ELSE]");
             response1 = dataInputStream.readUTF();
-            if (response1.equals("CHAT")) {
+            while(!validResponse){
+                if (response1.equals("CHAT WITH SOMEONE ELSE")) {
+                    response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
+                    validResponse = true;
+                }
+                else if(response1.equals("CHAT WITH THEM")){
+                    response1 = "CHAT"; //they can send unread messages to their friend
+                    dataOutputStream.writeUTF("Okay! Go ahead and start sending messages to " + recipient + ". She will see them later when she wants to chat with you!");
+                    validResponse = true;
+                }
+                else{
+                    dataOutputStream.writeUTF("Please input a valid response [CHAT WITH THEM | CHAT WITH SOMEONE ELSE]");
+                    response1 = dataInputStream.readUTF();
+                }
+            }
+            validResponse = false;
+            /*if (response1.equals("CHAT WITH SOMEONE ELSE")) {
                 response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
             }
+            else if(response1.equals("CHAT WITH THEM")){
+
+            }
+            else{
+                dataOutputStream.writeUTF("Please input a valid response [CHAT WITH THEM | CHAT WITH SOMEONE ELSE]");
+            }*/
         }
         else if(counter2 == 2 || counter2 == 0){
             response1 = "CHAT";
