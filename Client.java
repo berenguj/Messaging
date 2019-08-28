@@ -21,9 +21,10 @@ public class Client {
             Thread sendMessage = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    while(true){
+                    String msg = "";
+                    while(!msg.equals("LOGOUT")){
                         //read message
-                        String msg = scanner.nextLine();
+                        msg = scanner.nextLine();
                         try{
                             //write message
                             dataOutputStream.writeUTF(msg);
@@ -31,6 +32,13 @@ public class Client {
                         catch(Exception e){
                             e.printStackTrace();
                         }
+                    }
+                    try{
+                        dataOutputStream.writeUTF("Your friend has left the chat. Please login again and choose another friend to chat with!");
+                        System.out.println("you are now logged out!");
+                    }
+                    catch(Exception e){
+                        e.printStackTrace();
                     }
                 }
             });

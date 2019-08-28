@@ -121,7 +121,7 @@ public class Server {
                         }
                     }
 
-                    dataOutputStream.writeUTF("You are now logged in! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+                    dataOutputStream.writeUTF("You are now logged in! You can logout anytime during chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
 
 
                     //add them to the online users file list
@@ -148,7 +148,7 @@ public class Server {
                     writer2.write(password);
                     writer2.flush();
                     writer2.close();
-                    dataOutputStream.writeUTF("You are now signed up! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+                    dataOutputStream.writeUTF("You are now signed up! You can logout anytime while you're chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
                 }
 
                 //based on response from user, ask if they would like to add a friend or chat with someone
@@ -196,6 +196,7 @@ public class Server {
                 e.printStackTrace();
             }
         }
+
 
     }
 
@@ -297,7 +298,7 @@ public class Server {
         dataOutputStream.writeUTF("counter2: " +counter2);
 
         if (counter1 == 0) { //counter didn't increase
-            dataOutputStream.writeUTF("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT]");
+            dataOutputStream.writeUTF("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT | LOGOUT]");
             response1 = dataInputStream.readUTF();
             if (response1.equals("CHAT")) {
                 response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
@@ -416,6 +417,7 @@ public class Server {
             validResponse = false;
         }
 
+        dataOutputStream.writeUTF("repsonse one in function: " +response1);
         responseHandlerReturn.add(0, recipient);
         responseHandlerReturn.add(1, response1);
         responseHandlerReturn.add(2, validResponse);
