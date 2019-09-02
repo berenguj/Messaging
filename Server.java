@@ -6,29 +6,22 @@ import java.text.*;
 
 public class Server {
 
+    private String name;
+    private String recipient;
+
+    public Server(String n, String r){
+        name = n;
+        recipient = r;
+    }
+
     //vector to store active clients
     static Vector<ClientHandler> clients = new Vector<>();
 
 
     public static void main(String args[]) throws IOException {
 
-        //variables
-        Server server = new Server();
-        boolean existingUser = false;
-        boolean correctPassword = false;
-        boolean validResponse = false;
-        Object validResponseObject;
-        Object recipientObject;
-        Object response1Object;
-        String response1; //String addChat;
-        String response2; //String secondAddChat;
-        String signupORlogin;
         String name = null;
         String recipient = null;
-        String[] chatReturn;
-        Vector<Object> responseHandlerReturn = new Vector<>();
-        Vector<String> alreadychatting = new Vector<String>();
-        Vector<String> onlineusers = new Vector<>();
 
         //server listening on port 5056
         ServerSocket serverSocket = new ServerSocket(5056);
@@ -41,136 +34,15 @@ public class Server {
                 //socket object to receive incoming client request
                 s = serverSocket.accept();
 
+                Client client = new Client();
                 System.out.println("A new client is connected: " + s);
 
                 //obtain input and output streams
                 DataInputStream dataInputStream = new DataInputStream(s.getInputStream());
                 DataOutputStream dataOutputStream = new DataOutputStream(s.getOutputStream());
 
-                //ask for username from client and add them to the user list
-                dataOutputStream.writeUTF("Would you like to sign up for an account or login to an existing account?:  [SIGN UP | LOGIN]");
-                signupORlogin = dataInputStream.readUTF();
+                //obtain name and recipient
 
-                while(!validResponse){
-                    if(signupORlogin.equals("SIGN UP")){
-                        dataOutputStream.writeUTF("Please type in the username you would like: ");
-                        name = dataInputStream.readUTF();
-                        validResponse = true;
-                    }
-                    else if(signupORlogin.equals("LOGIN")){
-                        dataOutputStream.writeUTF("Please type in your username: ");
-                        name = dataInputStream.readUTF();
-                        validResponse = true;
-                    }
-                    else{
-                        dataOutputStream.writeUTF("Please enter a valid response [SIGN UP | LOGIN]");
-                        signupORlogin = dataInputStream.readUTF();
-                    }
-                }
-                //reset for next while loop
-                validResponse = false;
-
-                //check if they are an existing user
-                BufferedReader reader1 = new BufferedReader(new FileReader("users.txt"));
-                String line = null;
-                line = reader1.readLine();
-                while ((line = reader1.readLine()) != null) {
-                    if (name.equals(line)) {
-                        existingUser = true;
-                    }
-                }
-                line = null;
-                System.out.println("existing user:" +existingUser);
-
-                //login an existing user
-                if (existingUser) {
-
-                    dataOutputStream.writeUTF("oneline users before: " +onlineusers);
-                    for(int i = 0; i < onlineusers.size(); i++){
-                        if(onlineusers.get(i).equals(name)){
-                            dataOutputStream.writeUTF("Sorry you are already logged on! Please use the other window instead.");
-                            System.exit(10);
-                        }
-                    }
-
-                    dataOutputStream.writeUTF("Welcome back " + name + "!" + " Please type in your password: ");
-                    String password = dataInputStream.readUTF();
-                    //dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
-
-                    BufferedReader reader2 = new BufferedReader(new FileReader(name + ".txt")); //password will be the very first line of their text file followed by their friends list
-                    for(int i = 0; i < 2; i++){
-                        line = reader2.readLine();
-                        if (password.equals(line)) {
-                            correctPassword = true;
-                        } else {
-                            correctPassword = false;
-                        }
-                    }
-
-                    while(!correctPassword){
-                        dataOutputStream.writeUTF("Incorrect password. Please try again: ");
-                        password = dataInputStream.readUTF();
-                        BufferedReader reader3 = new BufferedReader(new FileReader(name + ".txt"));
-                        for(int i = 0; i < 2; i++){
-                            line = reader3.readLine();
-                            if (password.equals(line)) {
-                                correctPassword = true;
-                            } else {
-                                correctPassword = false;
-                            }
-                        }
-                    }
-
-                    dataOutputStream.writeUTF("You are now logged in! You can logout anytime during chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
-
-
-                    //add them to the online users file list
-                    BufferedWriter writer = new BufferedWriter(new FileWriter("onlineusers.txt", false));
-                    writer.write(name);
-                    writer.newLine();
-                    writer.flush();
-                    writer.close();
-
-                }
-
-                //add the new user to the user list and log them in
-                else if (!existingUser) {
-                    BufferedWriter writer1 = new BufferedWriter(new FileWriter("users.txt", true));
-                    writer1.write(name);
-                    writer1.newLine();
-                    writer1.flush();
-                    writer1.close();
-                    dataOutputStream.writeUTF("Your username is set! Please type in a password: ");
-                    String password = dataInputStream.readUTF();
-
-                    PrintWriter writer2 = new PrintWriter(new FileWriter(name + ".txt", true));
-                    writer2.write("\n");
-                    writer2.write(password);
-                    writer2.flush();
-                    writer2.close();
-                    dataOutputStream.writeUTF("You are now signed up! You can logout anytime while you're chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
-                }
-
-                //based on response from user, ask if they would like to add a friend or chat with someone
-                //consider all possible cases like adding then chatting, or invalid responses, etc
-                response1 = dataInputStream.readUTF();
-                //responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
-                while (!validResponse) {
-
-                    responseHandlerReturn = server.ResponseHandler2(dataOutputStream, dataInputStream, name, server, response1, alreadychatting);
-                    validResponseObject = responseHandlerReturn.get(2);
-                    validResponse = (boolean) validResponseObject;
-                    recipientObject = responseHandlerReturn.get(0);
-                    recipient = (String) recipientObject;
-                    response1Object = responseHandlerReturn.get(1);
-                    response1 = (String) response1Object;
-
-                }
-                validResponse = false;
-
-                //dataOutputStream.writeUTF("Who would you like to talk to?");
-                //String recipient = dataInputStream.readUTF();
-                //dataOutputStream.writeUTF("Okay! Go ahead and start sending messages to " +recipient);
 
                 System.out.println("Creating new handler for this client...");
 
@@ -434,6 +306,7 @@ public class Server {
         boolean loggedin;
         private String name;
         private String recipient;
+        private int stepCount;
         //private int clientNum;
         //boolean nameSet = false;
 
@@ -452,26 +325,37 @@ public class Server {
             String toreturn;
             while (true) {
                 try {
-                    //receive string
-                    received = dataInputStream.readUTF();
-
-                    System.out.println(received);
-
-                    if (received.equals("logout")) {
-                        this.loggedin = false;
-                        this.socket.close();
-                        break;
+                    stepCount++;
+                    if(stepCount == 1){
+                        name = dataInputStream.readUTF();
+                        System.out.println("name recieved: " + name);
                     }
+                    else if(stepCount == 2){
+                        recipient = dataInputStream.readUTF();
+                        System.out.println("recipient recieved: " +recipient);
+                    }
+                    else{
+                        //receive string
+                        received = dataInputStream.readUTF();
 
-                    String msgToSend = received;
+                        System.out.println(received);
 
-                    //search for recipient in list
-                    for (ClientHandler mc : Server.clients) {
-
-                        //if recipient found, write on its output stream
-                        if (mc.name.equals(recipient) && mc.loggedin) {
-                            mc.dataOutputStream.writeUTF(this.name + ": " + msgToSend);
+                        if (received.equals("logout")) {
+                            this.loggedin = false;
+                            this.socket.close();
                             break;
+                        }
+
+                        String msgToSend = received;
+
+                        //search for recipient in list
+                        for (ClientHandler mc : Server.clients) {
+
+                            //if recipient found, write on its output stream
+                            if (mc.name.equals(recipient) && mc.loggedin) {
+                                mc.dataOutputStream.writeUTF(this.name + ": " + msgToSend);
+                                break;
+                            }
                         }
                     }
 
