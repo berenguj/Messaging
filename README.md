@@ -3,7 +3,7 @@
 in Java, so I followed a basic tutorial and then implemented my own additional features from there. I hope to keep building on this
 project with more essential features of typical messaging apps and a functioning GUI. 
 
-##How To Run The Program
+## How To Run The Program
 To run the program, first run the server file. Then, run the client file. If you haven't used this program already, you'll have to 
 create an account by typing in 'SIGN UP'. Special phrases are needed for the program to work so when you see something like 
 "Would you like to sign up or login [SIGN UP | LOGIN]" the [SIGN UP | LOGIN] notation is indicating to you the correct phrase you'll
