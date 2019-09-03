@@ -9,12 +9,17 @@ public class Client {
     private static boolean existingUser = false;
     private  static boolean correctPassword = false;
     private  static boolean validResponse = false;
+    private  static boolean initialLogin = false;
+    private static boolean scenario1;
+    private static boolean scenario2;
+    private static boolean scenario3;
     private  static Object validResponseObject;
     private  static Object recipientObject;
     private  static Object response1Object;
     private  static String response1; //String addChat;
     private  static String response2; //String secondAddChat;
     private static String signupORlogin;
+    private  static String tryORcreate = "";
     private  static String name;
     private  static String recipient;
     private  static String[] chatReturn;
@@ -54,7 +59,6 @@ public class Client {
                 else if(signupORlogin.equals("LOGIN")){
                     System.out.println("Please type in your username: ");
                     name = scan.next();
-                    dataOutputStream.writeUTF(name); //gives the name to the server
                     validResponse = true;
                 }
                 else{
@@ -78,72 +82,92 @@ public class Client {
             System.out.println("existing user:" +existingUser);
 
             //login an existing user
-            if (existingUser) {
+            while(!initialLogin) {
 
-                System.out.println("oneline users before: " +onlineusers);
-                for(int i = 0; i < onlineusers.size(); i++){
-                    if(onlineusers.get(i).equals(name)){
-                        System.out.println("Sorry you are already logged on! Please use the other window instead.");
-                        System.exit(10);
+                if ((existingUser && signupORlogin.equals("LOGIN"))) {
+
+                    System.out.println("oneline users before: " + onlineusers);
+                    for (int i = 0; i < onlineusers.size(); i++) {
+                        if (onlineusers.get(i).equals(name)) {
+                            System.out.println("Sorry you are already logged on! Please use the other window instead.");
+                            System.exit(10);
+                        }
                     }
-                }
 
-                System.out.println("Welcome back " + name + "!" + " Please type in your password: ");
-                String password = scan.next();
-                //dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+                    dataOutputStream.writeUTF(name); //gives the name to the server
+                    System.out.println("Welcome back " + name + "!" + " Please type in your password: ");
+                    String password = scan.next();
+                    //dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
 
-                BufferedReader reader2 = new BufferedReader(new FileReader(name + ".txt")); //password will be the very first line of their text file followed by their friends list
-                for(int i = 0; i < 2; i++){
-                    line = reader2.readLine();
-                    if (password.equals(line)) {
-                        correctPassword = true;
-                    } else {
-                        correctPassword = false;
-                    }
-                }
-
-                while(!correctPassword){
-                    System.out.println("Incorrect password. Please try again: ");
-                    password = scan.next();
-                    BufferedReader reader3 = new BufferedReader(new FileReader(name + ".txt"));
-                    for(int i = 0; i < 2; i++){
-                        line = reader3.readLine();
+                    BufferedReader reader2 = new BufferedReader(new FileReader(name + ".txt")); //password will be the very first line of their text file followed by their friends list
+                    for (int i = 0; i < 2; i++) {
+                        line = reader2.readLine();
                         if (password.equals(line)) {
                             correctPassword = true;
                         } else {
                             correctPassword = false;
                         }
                     }
+
+                    while (!correctPassword) {
+                        System.out.println("Incorrect password. Please try again: ");
+                        password = scan.next();
+                        BufferedReader reader3 = new BufferedReader(new FileReader(name + ".txt"));
+                        for (int i = 0; i < 2; i++) {
+                            line = reader3.readLine();
+                            if (password.equals(line)) {
+                                correctPassword = true;
+                            } else {
+                                correctPassword = false;
+                            }
+                        }
+                    }
+
+                    initialLogin = true;
+                    System.out.println("You are now logged in! You can logout anytime during chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
+
+
+                    //add them to the online users file list
+                    BufferedWriter writer = new BufferedWriter(new FileWriter("onlineusers.txt", false));
+                    writer.write(name);
+                    writer.newLine();
+                    writer.flush();
+                    writer.close();
+
+                } else if (!existingUser && signupORlogin.equals("LOGIN")) {
+                    System.out.println("Sorry that username does not exist. Please type in the correct username.");
+                    name = scan.next();
+                    System.out.println("name: " +name);
+
+                    //check if they are an existing user
+                    BufferedReader reader2 = new BufferedReader(new FileReader("users.txt"));
+                    String line2 = null;
+                    line2 = reader2.readLine();
+                    while ((line2 = reader2.readLine()) != null) {
+                        if (name.equals(line2)) {
+                            existingUser = true;
+                        }
+                    }
+                    System.out.println("existignuser: " +existingUser);
+                    line2 = null;
+
+                } else if (!existingUser && signupORlogin.equals("SIGN UP")) {
+                    BufferedWriter writer1 = new BufferedWriter(new FileWriter("users.txt", true));
+                    writer1.write(name);
+                    writer1.newLine();
+                    writer1.flush();
+                    writer1.close();
+                    System.out.println("Your username is set! Please type in a password: ");
+                    String password = scan.next();
+
+                    PrintWriter writer2 = new PrintWriter(new FileWriter(name + ".txt", true));
+                    writer2.write("\n");
+                    writer2.write(password);
+                    writer2.flush();
+                    writer2.close();
+                    initialLogin = true;
+                    System.out.println("You are now signed up! You can logout anytime while you're chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
                 }
-
-                System.out.println("You are now logged in! You can logout anytime during chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
-
-
-                //add them to the online users file list
-                BufferedWriter writer = new BufferedWriter(new FileWriter("onlineusers.txt", false));
-                writer.write(name);
-                writer.newLine();
-                writer.flush();
-                writer.close();
-
-            }
-
-            //add the new user to the user list and log them in
-            else if (!existingUser) {
-                BufferedWriter writer1 = new BufferedWriter(new FileWriter("users.txt", true));
-                writer1.write(name);
-                writer1.newLine();
-                writer1.flush();
-                writer1.close();
-                System.out.println("Your username is set! Please type in a password: ");
-                String password = scan.next();
-
-                PrintWriter writer2 = new PrintWriter(new FileWriter(name + ".txt", true));
-                writer2.write("\n");
-                writer2.write(password);
-                writer2.flush();
-                writer2.close();
-                System.out.println("You are now signed up! You can logout anytime while you're chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
             }
 
             //based on response from user, ask if they would like to add a friend or chat with someone
@@ -183,10 +207,23 @@ public class Client {
                     try{
                         dataOutputStream.writeUTF("Your friend has left the chat. Please login again and choose another friend to chat with!");
                         System.out.println("you are now logged out!");
+                        dataInputStream.close();
+                        dataOutputStream.close();
+                        socket.close();
                     }
                     catch(Exception e){
-                        e.printStackTrace();
+                        System.out.println("you are now logged out! 2");
                     }
+
+                    //close the connection
+                    /*try{
+                        dataInputStream.close();
+                        dataOutputStream.close();
+                        socket.close();
+                    }
+                    catch(IOException i){
+                        System.out.println(i);
+                    }*/
                 }
             });
 
@@ -201,7 +238,8 @@ public class Client {
                             System.out.println(msg);
                         }
                         catch (Exception e){
-                            e.printStackTrace();
+                            System.out.println(e);
+                            System.exit(0);
                         }
                     }
                 }
@@ -213,7 +251,7 @@ public class Client {
 
         }
         catch (Exception e){
-            e.printStackTrace();
+           System.out.println(e);
         }
     }
 
