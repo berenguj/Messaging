@@ -2,6 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.Scanner;
 import java.util.Vector;
+import java.util.*;
 
 public class Client {
 
@@ -300,13 +301,12 @@ public class Client {
         //set up: have pairs of people talking to each other right next to each other
         //ie: Jada Andler Nanu Ina means Jada and Andler are chatting and Nanu and Ina are chatting
 
-        System.out.println("name: " + name);
-        System.out.println("filename: " + name + ".txt");
         BufferedReader reader1 = new BufferedReader(new FileReader(filename));
         String line = reader1.readLine(); //skip two lines so it doesn't show the password
         line = reader1.readLine();
         System.out.println("Here is your friends list and who is online: \n");
         Vector<String> onlineFriends = new Vector<>();
+        Vector<String> offlineFriends = new Vector<>();
         String friend = "";
         while ((line = reader1.readLine()) != null) {
             friend = line;
@@ -314,15 +314,32 @@ public class Client {
             String line2;
             while((line2 = reader2.readLine()) != null){
                 if(line2.equals(friend)){
-                    System.out.println(friend + ": online");
                     onlineFriends.add(friend);
                 }
-                else{
-                    System.out.println(friend + ": offline");
+            }
+            Iterator onlinevalue = onlineFriends.iterator();
+            int friendcount = 0;
+            while(onlinevalue.hasNext()){
+                if(onlinevalue.next().equals(friend)){
+                    friendcount++;
                 }
             }
-
+            if(friendcount == 0) {
+                offlineFriends.add(friend);
+            }
         }
+        System.out.println("onlinefriends: " +onlineFriends);
+        System.out.println("offilnefriends: " +offlineFriends);
+        Iterator onlinevalue = onlineFriends.iterator();
+        Iterator offlinevalue = offlineFriends.iterator();
+        while(onlinevalue.hasNext()){
+            System.out.println(onlinevalue.next() + ": online");
+        }
+        while(offlinevalue.hasNext()){
+            System.out.println(offlinevalue.next() + ": offline");
+        }
+
+
         System.out.println("already chatting before: " +alreadychatting);
         System.out.println("already chtting size: " +alreadychatting.size());
         System.out.println("Who would you like to chat with?");
