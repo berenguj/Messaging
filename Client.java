@@ -96,8 +96,8 @@ public class Client {
 
                     dataOutputStream.writeUTF(name); //gives the name to the server
                     System.out.println("Welcome back " + name + "!" + " Please type in your password: ");
+
                     String password = scan.next();
-                    //dataOutputStream.writeUTF("Welcome back! Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
 
                     BufferedReader reader2 = new BufferedReader(new FileReader(name + ".txt")); //password will be the very first line of their text file followed by their friends list
                     for (int i = 0; i < 2; i++) {
@@ -126,13 +126,6 @@ public class Client {
                     initialLogin = true;
                     System.out.println("You are now logged in! You can logout anytime during chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
 
-
-                    //add them to the online users file list
-                    BufferedWriter writer = new BufferedWriter(new FileWriter("onlineusers.txt", false));
-                    writer.write(name);
-                    writer.newLine();
-                    writer.flush();
-                    writer.close();
 
                 } else if (!existingUser && signupORlogin.equals("LOGIN")) {
                     System.out.println("Sorry that username does not exist. Please type in the correct username.");
@@ -312,9 +305,23 @@ public class Client {
         BufferedReader reader1 = new BufferedReader(new FileReader(filename));
         String line = reader1.readLine(); //skip two lines so it doesn't show the password
         line = reader1.readLine();
-        System.out.println("Here is your friends list: \n");
+        System.out.println("Here is your friends list and who is online: \n");
+        Vector<String> onlineFriends = new Vector<>();
+        String friend = "";
         while ((line = reader1.readLine()) != null) {
-            System.out.println(line);
+            friend = line;
+            BufferedReader reader2 = new BufferedReader(new FileReader("onlineUsers.txt"));
+            String line2;
+            while((line2 = reader2.readLine()) != null){
+                if(line2.equals(friend)){
+                    System.out.println(friend + ": online");
+                    onlineFriends.add(friend);
+                }
+                else{
+                    System.out.println(friend + ": offline");
+                }
+            }
+
         }
         System.out.println("already chatting before: " +alreadychatting);
         System.out.println("already chtting size: " +alreadychatting.size());
