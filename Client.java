@@ -344,7 +344,39 @@ public class Client {
         System.out.println("already chtting size: " +alreadychatting.size());
         System.out.println("Who would you like to chat with?");
         recipient = scan.next();
-        dataOutputStream.writeUTF(recipient); //gives the recipient's name to the server
+
+        //check if they're online
+        int onlineCount = 0;
+        Iterator onlinevalue2 = onlineFriends.iterator();
+        while(onlinevalue2.hasNext()){
+            System.out.println("recipient: " + recipient);
+            if(onlinevalue2.next().equals(recipient)){
+                System.out.println("onlinevalue2.next: " +onlinevalue2.next());
+                dataOutputStream.writeUTF(recipient); //give recipient name to server
+                onlineCount = 0;
+                break;
+            }
+            else{
+                onlineCount++;
+            }
+            System.out.println("online count: " +onlineCount);
+        }
+        while(onlineCount != 0){
+            System.out.println("Sorry they're currently offline! Please type the name of a friend that is online: ");
+            recipient = scan.next();
+            Iterator onlinevalue3 = onlineFriends.iterator();
+            while(onlinevalue3.hasNext()){
+                if(onlinevalue3.next().equals(recipient)){
+                    dataOutputStream.writeUTF(recipient);
+                    onlineCount = 0;
+                    break;
+                }
+                else{
+                    onlineCount++;
+                }
+            }
+        }
+
         //check if they are friends with them
         BufferedReader reader2 = new BufferedReader(new FileReader(filename));
         line = reader2.readLine();
@@ -355,23 +387,13 @@ public class Client {
             }
             line = reader2.readLine();
         }
-        System.out.println("i can get here 1");
         //check if they are already chatting with someone or chose to already chat with you
         for(int i = 0; i < alreadychatting.size(); i++){
-            System.out.println("i can get here 2");
-            System.out.println("already chatting get i: " +alreadychatting.get(i));
-            System.out.println("already chatting get i+1: " +alreadychatting.get(i+1));
-            /*if((alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient)) && (alreadychatting.get(i+1).equals(name) || alreadychatting.get(i+1).equals(recipient))){
-                counter2+=2;
-                dataOutputStream.writeUTF("i can get here 3");
-            }*/
             if((alreadychatting.get(i).equals(name) && alreadychatting.get(i+1).equals(recipient)) || (alreadychatting.get(i).equals(recipient) && alreadychatting.get(i+1).equals(name))){
                 counter2+=2;
-                System.out.println("i can get here 3");
             }
             else if(alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient) || alreadychatting.get(i+1).equals(name) || alreadychatting.get(i+1).equals(recipient)){
                 counter2++;
-                System.out.println("i can get here 4");
             }
             i+=2;
         }
