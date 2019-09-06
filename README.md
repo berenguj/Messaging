@@ -15,13 +15,13 @@ will alert the friend/other client you were chatting with that you have logged o
 order to chat with someone else. 
 
 ## Functionalities
-[x] Clients Online Simultaneously
-[x] Username and Password
-[x] Friends List
-[x] Online Status
-[x] Valid Response Checks
-[x] Notifications
-[x] Unread Messages
+- Clients Online Simultaneously
+- Username and Password
+- Friends List
+- Online Status
+- Valid Response Checks
+- Notifications
+- Unread Messages
 
 ## Future Things I Will Implement
 Some more features that I plan on implementing is first, encrypting the passwords and also finding a better way to store all of the data, and a functioning GUI.
