@@ -389,6 +389,7 @@ public class Client {
                     offlineFriends.add(friend);
                 }
             }
+            friend = recipient;
             System.out.println("onlinefriends: " +onlineFriends);
             System.out.println("offilnefriends: " +offlineFriends);
             Iterator onlinevalue = onlineFriends.iterator();
@@ -490,41 +491,47 @@ public class Client {
                 System.out.println("friendresponse: " +friendResponse);
                 String sendChatResponse = "";
                 String unreadmsgs = "";
+                boolean sendChat = false;
                 if(friendResponse.equals("accepted")){
                     response1 = "CHAT";
-                    System.out.println(friend + " has accepted your request! Go ahead and start sending each other messages! :)");
+                    System.out.println(recipient + " has accepted your request! Go ahead and start sending each other messages! :)");
+                    sendChat = true;
                 }
                 else{
                     System.out.println("Sorry, " + recipient + " does not want to chat with you right now. Did you want to send them messages that they can view " +
                             "later or try to chat with someone else? [SEND | CHAT]");
                     sendChatResponse = scan.next();
                 }
-                while(sendChatResponse != null){
-                    System.out.println("Please enter a valid response [SEND | CHAT]");
-                    sendChatResponse = scan.next();
-                }
-                if(sendChatResponse.equals("SEND")){
-                    System.out.println("Okay! Go ahead and start sending messages that " + recipient + " can see later. When you're done, please type 'LOGOUT'.");
-                    unreadmsgs = scan.next();
-                    Date currdate = new Date();
+                while(!sendChat) {
+                    if (sendChatResponse.equals("SEND")) {
+                        System.out.println("Okay! Go ahead and start sending messages that " + recipient + " can see later. When you're done, please type 'LOGOUT'.");
+                        unreadmsgs = scan.next();
+                        Date currdate = new Date();
 
-                    BufferedWriter writer = new BufferedWriter(new FileWriter("unread" + recipient + ".txt", true));
-                    writer.write(name);
-                    writer.newLine();
-                    writer.write("hi");
-                    writer.flush();
-                    writer.close();
-
-                    while(!unreadmsgs.equals("LOGOUT")){
-                        writer.write(unreadmsgs);
+                        BufferedWriter writer = new BufferedWriter(new FileWriter("unread" + recipient + ".txt", true));
+                        writer.write(name);
                         writer.newLine();
+                        writer.write("hi");
                         writer.flush();
                         writer.close();
-                    }
 
-                }
-                else if(sendChatResponse.equals("CHAT")){
-                    response1 = "CHATDISP";
+                        while (!unreadmsgs.equals("LOGOUT")) {
+                            writer.write(unreadmsgs);
+                            writer.newLine();
+                            writer.flush();
+                            writer.close();
+                        }
+
+                        sendChat = true;
+
+                    } else if (sendChatResponse.equals("CHAT")) {
+                        response1 = "CHATDISP";
+                        sendChat = true;
+
+                    } else {
+                        System.out.println("Please enter a valid response [SEND | CHAT]");
+                        sendChatResponse = scan.next();
+                    }
                 }
             }
 
