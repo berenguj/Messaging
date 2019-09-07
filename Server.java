@@ -104,7 +104,9 @@ public class Server {
             while (!received.equals("LOGOUT")) {
                 try {
                     stepCount++;
+                    System.out.println("stepcount: " +stepCount);
                     if(stepCount == 1){ //obtain username
+                        System.out.println("i am in stepcount 1");
                         name = dataInputStream.readUTF();
                         System.out.println("name recieved: " + name);
 
@@ -114,33 +116,53 @@ public class Server {
                         writer1.flush();
                         writer1.close();
                     }
-                    else if(stepCount == 2) { //obtain recipient and see if they are already chatting with someone
+                    else if(stepCount == 2) { //obtain recipient and see if they are already chatting with someone or see if they got a notification
+                        System.out.println("i am in stepcount 2");
                         recipient = dataInputStream.readUTF();
                         System.out.println("recipient recieved: " + recipient);
-
-                        //check who is chatting with each other already
-                        //check if they are already chatting with someone or chose to already chat with you
-                        for (int i = 0; i < alreadychatting.size(); i++) {
-                            if ((alreadychatting.get(i).equals(name) && alreadychatting.get(i + 1).equals(recipient)) || (alreadychatting.get(i).equals(recipient) && alreadychatting.get(i + 1).equals(name))) {
-                                counter2 += 2;
-                            } else if (alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient) || alreadychatting.get(i + 1).equals(name) || alreadychatting.get(i + 1).equals(recipient)) {
-                                counter2++;
+                        if(recipient.equals("notification")){
+                            stepCount++; //should make stepcount == 4 in the next iteration
+                            //get the name of the person who sent the notification
+                            recipient = dataInputStream.readUTF();
+                            System.out.println("recipient after: " +recipient);
+                            System.out.println("im in here!");
+                            //need to send something back to the client that sent the notification so they can start chatting with them
+                            //search for recipient in list
+                            for (ClientHandler mc : Server.clients) {
+                                //if recipient found, write on its output stream
+                                if (mc.name.equals(recipient) && mc.loggedin) {
+                                    mc.dataOutputStream.writeUTF("accepted"); //need to write this to whoever SENT the notification not who accepted it
+                                    break;
+                                }
                             }
-                            i += 2;
                         }
+                        else{
+                            //System.out.println("recipient recieved: " + recipient);
 
-                        System.out.println("counter2: " +counter2);
-                        dataOutputStream.writeUTF(Integer.toString(counter2));
-
-                        if(counter2 == 2 || counter2 == 0){
-
-                            //add them to the already chatting vector
-                            if(counter2 == 0){
-                                alreadychatting.add(name);
-                                alreadychatting.add(recipient);
+                            //check who is chatting with each other already
+                            //check if they are already chatting with someone or chose to already chat with you
+                            for (int i = 0; i < alreadychatting.size(); i++) {
+                                if ((alreadychatting.get(i).equals(name) && alreadychatting.get(i + 1).equals(recipient)) || (alreadychatting.get(i).equals(recipient) && alreadychatting.get(i + 1).equals(name))) {
+                                    counter2 += 2;
+                                } else if (alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient) || alreadychatting.get(i + 1).equals(name) || alreadychatting.get(i + 1).equals(recipient)) {
+                                    counter2++;
+                                }
+                                i += 2;
                             }
 
-                            System.out.println("already chatting after: " +alreadychatting);
+                            System.out.println("counter2: " +counter2);
+                            dataOutputStream.writeUTF(Integer.toString(counter2));
+
+                            if(counter2 == 2 || counter2 == 0){
+
+                                //add them to the already chatting vector
+                                if(counter2 == 0){
+                                    alreadychatting.add(name);
+                                    alreadychatting.add(recipient);
+                                }
+
+                                System.out.println("already chatting after: " +alreadychatting);
+                            }
                         }
                     }
                     else if(stepCount == 3){ //give the notification to the recipient that someone wants to chat with them
@@ -157,9 +179,10 @@ public class Server {
                             }
                         }
 
-                        String friendresponse = dataInputStream.readUTF();
+                        /*String friendresponse = dataInputStream.readUTF();
                         System.out.println("friend response: " +friendresponse);
                         if(friendresponse.equals("YES") || friendresponse.equals("NO")){
+                            System.out.println("do i ever get to here?");
                             dataOutputStream.writeUTF(friendresponse);
                         }
                         else{
@@ -172,8 +195,11 @@ public class Server {
                                     break;
                                 }
                             }
-                        }
+                        }*/
 
+                    }
+                    else if(stepCount == 4){ //client has already recieved a notification
+                        System.out.println("i am in stepcount 4");
                     }
                     else{
                         //receive string

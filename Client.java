@@ -318,8 +318,9 @@ public class Client {
 
         //check notifications
         String notification;
-        String friendResponse;
+        String friendResponse = " ";
         boolean validFriendResponse = false;
+        boolean mutualChat = false;
         System.out.println("First lets see if there's any notifications for you:");
         //first check if they are the first person online or else there will be no notifications to read
         if(firstOnlineUser){
@@ -331,11 +332,14 @@ public class Client {
             notification = dataInputStream.readUTF();
             if(notification != null){
                 if(notification.contains("would like to chat with you")){
+                    //need to send something to the server indicating that this client got a notification
+                    dataOutputStream.writeUTF("notification");
+                    //print out notification
                     System.out.println(notification);
                     friendResponse = scan.next();
-                    System.out.println("friendresponse: " +friendResponse);
                     recipient = notification.substring(0, notification.indexOf(" "));
-                    System.out.println("recipient: " +recipient);
+                    //send the name of the person who sent the notification to the server
+                    dataOutputStream.writeUTF(recipient);
                     while(!validFriendResponse){
                         if(friendResponse.equals("YES")){
                             counter2 = 3;
@@ -482,10 +486,11 @@ public class Client {
             else if(counter2 == 0){
                 dataOutputStream.writeUTF(name + " would like to chat with you. Would you like to chat with them? [YES | NO]");
                 //retrieve their response
-                String friendresponse = dataInputStream.readUTF();
+                friendResponse = dataInputStream.readUTF();
+                System.out.println("friendresponse: " +friendResponse);
                 String sendChatResponse = "";
                 String unreadmsgs = "";
-                if(friendresponse.equals("YES")){
+                if(friendResponse.equals("YES")){
                     response1 = "CHAT";
                     System.out.println(friend + " has already requested to chat with you too! Go ahead and start sending each other messages! :)");
                 }
@@ -530,7 +535,7 @@ public class Client {
             }
         }
         //they received a notification and want to chat with them
-        else{
+        else{ //counter == 3
             response1 = "CHAT";
             System.out.println("Request accepted! Go ahead and chat with " +recipient);
         }
@@ -600,7 +605,6 @@ public class Client {
             validResponse = false;
         }
 
-        System.out.println("repsonse one in function: " +response1);
         responseHandlerReturn.add(0, recipient);
         responseHandlerReturn.add(1, response1);
         responseHandlerReturn.add(2, validResponse);
