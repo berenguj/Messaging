@@ -490,12 +490,12 @@ public class Client {
                 System.out.println("friendresponse: " +friendResponse);
                 String sendChatResponse = "";
                 String unreadmsgs = "";
-                if(friendResponse.equals("YES")){
+                if(friendResponse.equals("accepted")){
                     response1 = "CHAT";
-                    System.out.println(friend + " has already requested to chat with you too! Go ahead and start sending each other messages! :)");
+                    System.out.println(friend + " has accepted your request! Go ahead and start sending each other messages! :)");
                 }
                 else{
-                    System.out.println("Sorry, " + friend + " does not want to chat with you right now. Did you want to send them messages that they can view " +
+                    System.out.println("Sorry, " + recipient + " does not want to chat with you right now. Did you want to send them messages that they can view " +
                             "later or try to chat with someone else? [SEND | CHAT]");
                     sendChatResponse = scan.next();
                 }
