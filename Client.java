@@ -13,7 +13,7 @@ public class Client {
     private  static boolean correctPassword = false;
     private  static boolean validResponse = false;
     private  static boolean initialLogin = false;
-    private static boolean firstOnlineUser = true;
+    private static boolean firstOnlineUser = false;
     private  static Object validResponseObject;
     private  static Object recipientObject;
     private  static Object response1Object;
@@ -87,27 +87,22 @@ public class Client {
 
                 if ((existingUser && signupORlogin.equals("LOGIN"))) {
 
-                    System.out.println("oneline users before: " + onlineusers);
-                    for (int i = 0; i < onlineusers.size(); i++) {
-                        if (onlineusers.get(i).equals(name)) {
+                    //check if someone is trying to login twice
+                    BufferedReader onlinereader1 = new BufferedReader(new FileReader("onlineusers.txt")); //password will be the very first line of their text file followed by their friends list
+                    line = onlinereader1.readLine();
+                    while(line != null){
+                        if(name.equals(line)){
                             System.out.println("Sorry you are already logged on! Please use the other window instead.");
                             System.exit(10);
                         }
+                        line = onlinereader1.readLine();
                     }
 
-                    //first online user check
-                    File onlineUsersFile = new File("onlineusers.txt");
-                    if(onlineUsersFile.length() != 0){
-                        firstOnlineUser = false;
-                    }
-                    System.out.println("firstonlineuser: " + firstOnlineUser);
-
-                    //give name to server
-                    dataOutputStream.writeUTF(name); //gives the name to the server
+                    //get password
                     System.out.println("Welcome back " + name + "!" + " Please type in your password: ");
-
                     String password = scan.next();
 
+                    //verify password
                     BufferedReader reader2 = new BufferedReader(new FileReader(name + ".txt")); //password will be the very first line of their text file followed by their friends list
                     for (int i = 0; i < 2; i++) {
                         line = reader2.readLine();
@@ -132,9 +127,31 @@ public class Client {
                         }
                     }
 
+                    //successful login
                     initialLogin = true;
                     System.out.println("You are now logged in! You can logout anytime during chatting by typing 'LOGOUT'. Would you like to add friends to your friends list or chat with a current friend? [ADD | CHAT]");
-                    //first check if they are the first person online or else there will be no notifications to read later on
+
+                    //give name to server
+                    dataOutputStream.writeUTF(name); //gives the name to the server
+                    //add them to onlineusers list
+                    BufferedWriter writer1 = new BufferedWriter(new FileWriter("onlineUsers.txt", true));
+                    writer1.write(name);
+                    writer1.newLine();
+                    writer1.flush();
+                    writer1.close();
+
+                    //first online user check
+                    BufferedReader onlinereader2 = new BufferedReader(new FileReader("onlineusers.txt")); //password will be the very first line of their text file followed by their friends list
+                    int onlinecount = 0;
+                    String onlineline = "";
+                    while(onlineline != null){
+                        onlineline = onlinereader2.readLine();
+                        onlinecount++;
+                        if(name.equals(onlineline) && onlinecount == 1){
+                            firstOnlineUser = true;
+                        }
+                    }
+                    System.out.println("firstonlineuser: " +firstOnlineUser);
 
                 } else if (!existingUser && signupORlogin.equals("LOGIN")) {
                     System.out.println("Sorry that username does not exist. Please type in the correct username.");
@@ -150,7 +167,6 @@ public class Client {
                             existingUser = true;
                         }
                     }
-                    System.out.println("existignuser: " +existingUser);
                     line2 = null;
 
                 } else if (!existingUser && signupORlogin.equals("SIGN UP")) {
