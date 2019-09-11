@@ -285,7 +285,7 @@ public class Client {
 
         }
         catch (Exception e){
-           System.out.println(e);
+            System.out.println(e);
         }
     }
 
@@ -321,7 +321,6 @@ public class Client {
         writer.write(friend);
         writer.flush();
         writer.close();
-
         dataOutputStream.writeUTF("Okay! " + friend + " was added! Would you like to add another friend or start chatting with current friends? [ADD | CHAT]");
         response1 = dataInputStream.readUTF();*/
 
@@ -347,125 +346,112 @@ public class Client {
         String notification;
         String friendResponse = " ";
         boolean validFriendResponse = false;
-        boolean mutualChat = false;
-        System.out.println("First lets see if there's any notifications for you:");
-        //check if have any notifications
-        boolean haveNotification = false;
-        BufferedReader notifreader = new BufferedReader(new FileReader("usersWithNotifications.txt")); //password will be the very first line of their text file followed by their friends list
-        String notifline = notifreader.readLine();
-        while(notifline != null){
-            if(name.equals(notifline)){
-                haveNotification = true;
+        boolean overallResponse = false;
+        while(!overallResponse){
+            System.out.println("First lets see if there's any notifications for you:");
+            //check if have any notifications
+            boolean haveNotification = false;
+            BufferedReader notifreader = new BufferedReader(new FileReader("usersWithNotifications.txt")); //password will be the very first line of their text file followed by their friends list
+            String notifline = notifreader.readLine();
+            while(notifline != null){
+                if(name.equals(notifline)){
+                    haveNotification = true;
+                }
+                notifline = notifreader.readLine();
             }
-            notifline = notifreader.readLine();
-        }
-        //check if they are the first person online or else there will be no notifications to read
-        //probs won't need this later
-        if(firstOnlineUser){
-            System.out.println("No notifications. You can now choose who you'd like to chat with.");
-        }
-        if(haveNotification){
-            //now check for notifications
-            //System.out.println("data input stream: " + dataInputStream.readUTF());
-            notification = dataInputStream.readUTF();
-            if(notification != null) {
-                if (notification.contains("would like to chat with you")) {
-                    //need to send something to the server indicating that this client got a notification
-                    dataOutputStream.writeUTF("notification");
-                    //print out notification
-                    System.out.println(notification);
-                    friendResponse = scan.next();
-                    recipient = notification.substring(0, notification.indexOf(" "));
-                    //send the name of the person who sent the notification to the server
-                    dataOutputStream.writeUTF(recipient);
-                    while (!validFriendResponse) {
-                        if (friendResponse.equals("YES")) {
-                            counter2 = 3;
-                            validFriendResponse = true;
-                        } else if (friendResponse.equals("NO")) {
-                            validFriendResponse = true;
-                        } else {
-                            System.out.println("Please enter a valid response [YES | NO]");
-                            friendResponse = scan.next();
+            //check if they are the first person online or else there will be no notifications to read
+            //probs won't need this later
+            if(firstOnlineUser){
+                System.out.println("No notifications. You can now choose who you'd like to chat with.");
+            }
+            if(haveNotification){
+                //now check for notifications
+                //System.out.println("data input stream: " + dataInputStream.readUTF());
+                notification = dataInputStream.readUTF();
+                if(notification != null) {
+                    if (notification.contains("would like to chat with you")) {
+                        //need to send something to the server indicating that this client got a notification
+                        dataOutputStream.writeUTF("notification");
+                        //print out notification
+                        System.out.println(notification);
+                        friendResponse = scan.next();
+                        recipient = notification.substring(0, notification.indexOf(" "));
+                        //send the name of the person who sent the notification to the server
+                        dataOutputStream.writeUTF(recipient);
+                        while (!validFriendResponse) {
+                            if (friendResponse.equals("YES")) {
+                                counter2 = 3;
+                                validFriendResponse = true;
+                            } else if (friendResponse.equals("NO")) {
+                                validFriendResponse = true;
+                            } else {
+                                System.out.println("Please enter a valid response [YES | NO]");
+                                friendResponse = scan.next();
+                            }
                         }
                     }
                 }
             }
-        }
-        else{
-            System.out.println("No notifications. You can now choose who you'd like to chat with.");
-        }
+            else{
+                System.out.println("No notifications. You can now choose who you'd like to chat with.");
+            }
 
-        if(counter2 != 3){
-            //displaying friend's list with online status
-            BufferedReader reader1 = new BufferedReader(new FileReader(filename));
-            String line = reader1.readLine(); //skip two lines so it doesn't show the password
-            line = reader1.readLine();
-            System.out.println("Here is your friends list and who is online: \n");
-            Vector<String> onlineFriends = new Vector<>();
-            Vector<String> offlineFriends = new Vector<>();
-            String friend = "";
-            while ((line = reader1.readLine()) != null) {
-                friend = line;
-                BufferedReader reader2 = new BufferedReader(new FileReader("onlineUsers.txt"));
-                String line2;
-                while((line2 = reader2.readLine()) != null){
-                    if(line2.equals(friend)){
-                        onlineFriends.add(friend);
+            if(counter2 != 3){
+                //displaying friend's list with online status
+                BufferedReader reader1 = new BufferedReader(new FileReader(filename));
+                String line = reader1.readLine(); //skip two lines so it doesn't show the password
+                line = reader1.readLine();
+                System.out.println("Here is your friends list and who is online: \n");
+                Vector<String> onlineFriends = new Vector<>();
+                Vector<String> offlineFriends = new Vector<>();
+                String friend = "";
+                while ((line = reader1.readLine()) != null) {
+                    friend = line;
+                    BufferedReader reader2 = new BufferedReader(new FileReader("onlineUsers.txt"));
+                    String line2;
+                    while((line2 = reader2.readLine()) != null){
+                        if(line2.equals(friend)){
+                            onlineFriends.add(friend);
+                        }
+                    }
+                    Iterator onlinevalue = onlineFriends.iterator();
+                    int friendcount = 0;
+                    while(onlinevalue.hasNext()){
+                        if(onlinevalue.next().equals(friend)){
+                            friendcount++;
+                        }
+                    }
+                    if(friendcount == 0) {
+                        offlineFriends.add(friend);
                     }
                 }
+                friend = recipient;
+                //System.out.println("onlinefriends: " +onlineFriends);
+                //System.out.println("offilnefriends: " +offlineFriends);
                 Iterator onlinevalue = onlineFriends.iterator();
-                int friendcount = 0;
+                Iterator offlinevalue = offlineFriends.iterator();
                 while(onlinevalue.hasNext()){
-                    if(onlinevalue.next().equals(friend)){
-                        friendcount++;
-                    }
+                    System.out.println(onlinevalue.next() + ": online");
                 }
-                if(friendcount == 0) {
-                    offlineFriends.add(friend);
+                while(offlinevalue.hasNext()){
+                    System.out.println(offlinevalue.next() + ": offline");
                 }
-            }
-            friend = recipient;
-            //System.out.println("onlinefriends: " +onlineFriends);
-            //System.out.println("offilnefriends: " +offlineFriends);
-            Iterator onlinevalue = onlineFriends.iterator();
-            Iterator offlinevalue = offlineFriends.iterator();
-            while(onlinevalue.hasNext()){
-                System.out.println(onlinevalue.next() + ": online");
-            }
-            while(offlinevalue.hasNext()){
-                System.out.println(offlinevalue.next() + ": offline");
-            }
 
-            //getting user input
-            System.out.println("already chatting before: " +alreadychatting);
-            System.out.println("already chtting size: " +alreadychatting.size());
-            System.out.println("Who would you like to chat with?");
-            recipient = scan.next();
-            //give recipient to server
-            dataOutputStream.writeUTF(recipient);
-            System.out.println("i wrote recipient to server");
-
-            //check if they're online
-            int onlineCount = 0;
-            Iterator onlinevalue2 = onlineFriends.iterator();
-            while(onlinevalue2.hasNext()){
-                if(onlinevalue2.next().equals(recipient)){
-                    //dataOutputStream.writeUTF(recipient); //give recipient name to server
-                    onlineCount = 0;
-                    break;
-                }
-                else{
-                    onlineCount++;
-                }
-            }
-            while(onlineCount != 0){
-                System.out.println("Sorry they're currently offline! Please type the name of a friend that is online: ");
+                //getting user input
+                System.out.println("already chatting before: " +alreadychatting);
+                System.out.println("already chtting size: " +alreadychatting.size());
+                System.out.println("Who would you like to chat with?");
                 recipient = scan.next();
-                Iterator onlinevalue3 = onlineFriends.iterator();
-                while(onlinevalue3.hasNext()){
-                    if(onlinevalue3.next().equals(recipient)){
-                        dataOutputStream.writeUTF(recipient);
+                //give recipient to server
+                dataOutputStream.writeUTF(recipient);
+                System.out.println("i wrote recipient to server");
+
+                //check if they're online
+                int onlineCount = 0;
+                Iterator onlinevalue2 = onlineFriends.iterator();
+                while(onlinevalue2.hasNext()){
+                    if(onlinevalue2.next().equals(recipient)){
+                        //dataOutputStream.writeUTF(recipient); //give recipient name to server
                         onlineCount = 0;
                         break;
                     }
@@ -473,146 +459,142 @@ public class Client {
                         onlineCount++;
                     }
                 }
-            }
-
-            //check if they are friends with them
-            BufferedReader reader2 = new BufferedReader(new FileReader(filename));
-            line = reader2.readLine();
-            while (line != null) {
-                line = line.replaceAll("\\s+", "");
-                if (recipient.equals(line)) { //friend is in the list
-                    counter1++;
-                }
-                line = reader2.readLine();
-            }
-
-            System.out.println("before counter2 returned from server");
-            //at this point the server will send back data on counter2, indicating if someone is chatting with someone else
-            counter2 = Integer.parseInt(dataInputStream.readUTF());
-            System.out.println("counter2: " +counter2);
-            System.out.println("after counter2 retruned from server");
-
-            if (counter1 == 0) { //counter didn't increase
-                System.out.println("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT | LOGOUT]");
-                response1 = scan.next();
-                if (response1.equals("CHAT")) {
-                    response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
-                }
-            }
-            else if(counter2 == 1){ //they are already chatting with someone
-                System.out.println("Sorry they are already chatting with another friend!" +
-                        " Did you want to send them messages that they can view later or chat with someone else? [THEM | ANOTHER]");
-                response1 = scan.next();
-                System.out.println("response1: " +response1);
-                //ResponseHandler2 for this
-
-                while (!validResponse) {
-
-                    responseHandlerReturn = client.ResponseHandler1(dataOutputStream, dataInputStream, name, client, response1, alreadychatting, scan, firstOnlineUser);
-                    validResponseObject = responseHandlerReturn.get(2);
-                    validResponse = (boolean) validResponseObject;
-                    recipientObject = responseHandlerReturn.get(0);
-                    recipient = (String) recipientObject;
-                    response1Object = responseHandlerReturn.get(1);
-                    response1 = (String) response1Object;
-
-                }
-                validResponse = false;
-
-                while(!validResponse){
-                    if (response1.equals("ANOTHER")) {
-                        //display friends list
-                        validResponse = true;
+                while(onlineCount != 0){
+                    System.out.println("Sorry they're currently offline! Please type the name of a friend that is online: ");
+                    recipient = scan.next();
+                    Iterator onlinevalue3 = onlineFriends.iterator();
+                    while(onlinevalue3.hasNext()){
+                        if(onlinevalue3.next().equals(recipient)){
+                            dataOutputStream.writeUTF(recipient);
+                            onlineCount = 0;
+                            break;
+                        }
+                        else{
+                            onlineCount++;
+                        }
                     }
-                    else if(response1.equals("THEM")){
-                        System.out.println("Okay! Go ahead and start sending messages to " + recipient + ". She will see them later when she wants to chat with you!");
-                        validResponse = true;
+                }
+
+                //check if they are friends with them
+                BufferedReader reader2 = new BufferedReader(new FileReader(filename));
+                line = reader2.readLine();
+                while (line != null) {
+                    line = line.replaceAll("\\s+", "");
+                    if (recipient.equals(line)) { //friend is in the list
+                        counter1++;
+                    }
+                    line = reader2.readLine();
+                }
+
+                //at this point the server will send back data on counter2, indicating if someone is chatting with someone else
+                counter2 = Integer.parseInt(dataInputStream.readUTF());
+                System.out.println("counter2: " +counter2);
+
+                if (counter1 == 0) { //counter didn't increase
+                    System.out.println("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT | LOGOUT]");
+                    response1 = scan.next();
+                    if (response1.equals("CHAT")) {
+                        response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
+                    }
+                }
+                else if(counter2 == 1){ //they are already chatting with someone
+                    System.out.println("Sorry they are already chatting with another friend!" +
+                            " Did you want to send them messages that they can view later or chat with someone else? [THEM | ANOTHER]");
+                    response1 = scan.next();
+                    System.out.println("response1: " +response1);
+
+                    while(!validResponse){
+                        if (response1.equals("ANOTHER")) {
+                            //display friends list
+                            validResponse = true;
+                        }
+                        else if(response1.equals("THEM")){
+                            System.out.println("Okay! Go ahead and start sending messages to " + recipient + ". She will see them later when she wants to chat with you!");
+                            validResponse = true;
+                        }
+                        else{
+                            System.out.println("Please input a valid response [THEM | ANOTHER]");
+                            response1 = scan.next();
+                        }
+                    }
+                    validResponse = false;
+                }
+
+                //send a notification to the friend saying they want to chat with them
+                else if(counter2 == 0){
+                    //add them to the usersWithNotifications.txt file
+                    BufferedWriter notifwriter = new BufferedWriter(new FileWriter("usersWithNotifications.txt", true));
+                    notifwriter.write(recipient);
+                    notifwriter.newLine();
+                    notifwriter.flush();
+                    notifwriter.close();
+                    dataOutputStream.writeUTF(name + " would like to chat with you. Would you like to chat with them? [YES | NO]");
+
+                    //retrieve their response
+                    System.out.println("Waiting for " + recipient + "'s response..");
+                    friendResponse = dataInputStream.readUTF();
+                    System.out.println("friendresponse: " +friendResponse);
+                    String sendChatResponse = "";
+                    String unreadmsgs = "";
+                    boolean sendChat = false;
+                    if(friendResponse.equals("accepted")){
+                        response1 = "CHAT";
+                        System.out.println(recipient + " has accepted your request! Go ahead and start sending each other messages! :)");
+                        sendChat = true;
+                        overallResponse = true;
                     }
                     else{
-                        System.out.println("Please input a valid response [CHAT WITH THEM | CHAT WITH SOMEONE ELSE]");
-                        response1 = scan.next();
-                    }
-                }
-                validResponse = false;
-            }
-
-            //send a notification to the friend saying they want to chat with them
-            else if(counter2 == 0){
-                //add them to the usersWithNotifications.txt file
-                BufferedWriter notifwriter = new BufferedWriter(new FileWriter("usersWithNotifications.txt", true));
-                notifwriter.write(recipient);
-                notifwriter.newLine();
-                notifwriter.flush();
-                notifwriter.close();
-                dataOutputStream.writeUTF(name + " would like to chat with you. Would you like to chat with them? [YES | NO]");
-
-                //retrieve their response
-                System.out.println("Waiting for " + recipient + "'s response..");
-                friendResponse = dataInputStream.readUTF();
-                System.out.println("friendresponse: " +friendResponse);
-                String sendChatResponse = "";
-                String unreadmsgs = "";
-                boolean sendChat = false;
-                if(friendResponse.equals("accepted")){
-                    response1 = "CHAT";
-                    System.out.println(recipient + " has accepted your request! Go ahead and start sending each other messages! :)");
-                    sendChat = true;
-                }
-                else{
-                    System.out.println("Sorry, " + recipient + " does not want to chat with you right now. Did you want to send them messages that they can view " +
-                            "later or try to chat with someone else? [SEND | CHAT]");
-                    sendChatResponse = scan.next();
-                }
-                while(!sendChat) {
-                    if (sendChatResponse.equals("SEND")) {
-                        System.out.println("Okay! Go ahead and start sending messages that " + recipient + " can see later. When you're done, please type 'LOGOUT'.");
-                        unreadmsgs = scan.next();
-                        Date currdate = new Date();
-
-                        BufferedWriter writer = new BufferedWriter(new FileWriter("unread" + recipient + ".txt", true));
-                        writer.write(name);
-                        writer.newLine();
-                        writer.write("hi");
-                        writer.flush();
-                        writer.close();
-
-                        while (!unreadmsgs.equals("LOGOUT")) {
-                            writer.write(unreadmsgs);
-                            writer.newLine();
-                            writer.flush();
-                            writer.close();
-                        }
-
-                        sendChat = true;
-
-                    } else if (sendChatResponse.equals("CHAT")) {
-                        response1 = "CHATDISP";
-                        sendChat = true;
-
-                    } else {
-                        System.out.println("Please enter a valid response [SEND | CHAT]");
+                        System.out.println("Sorry, " + recipient + " does not want to chat with you right now. Did you want to send them messages that they can view " +
+                                "later or try to chat with someone else? [SEND | CHAT]");
                         sendChatResponse = scan.next();
                     }
+                    while(!sendChat) {
+                        if (sendChatResponse.equals("SEND")) {
+                            System.out.println("Okay! Go ahead and start sending messages that " + recipient + " can see later. When you're done, please type 'LOGOUT'.");
+                            unreadmsgs = scan.next();
+                            Date currdate = new Date();
+
+                            BufferedWriter writer = new BufferedWriter(new FileWriter("unread" + recipient + ".txt", true));
+                            writer.write(name);
+                            writer.newLine();
+                            writer.write("hi");
+                            writer.flush();
+                            writer.close();
+
+                            while (!unreadmsgs.equals("LOGOUT")) {
+                                writer.write(unreadmsgs);
+                                writer.newLine();
+                                writer.flush();
+                                writer.close();
+                            }
+
+                            sendChat = true;
+
+                        } else if (sendChatResponse.equals("CHAT")) {
+                            response1 = "CHATDISP";
+                            sendChat = true;
+
+                        } else {
+                            System.out.println("Please enter a valid response [SEND | CHAT]");
+                            sendChatResponse = scan.next();
+                        }
+                    }
+                }
+
+                //they are already chatting with them
+                else if(counter2 == 2){
+                    response1 = "CHAT";
+                    System.out.println(friend + " has already requested to chat with you too! Go ahead and start sending each other messages! :)");
+                    overallResponse = true;
                 }
             }
-
-            //they are already chatting with them
-            else if(counter2 == 2){
+            //they received a notification and want to chat with them
+            else{ //counter == 3
                 response1 = "CHAT";
-                System.out.println(friend + " has already requested to chat with you too! Go ahead and start sending each other messages! :)");
+                System.out.println("Request accepted! Go ahead and chat with " +recipient);
+                overallResponse = true;
             }
         }
-        //they received a notification and want to chat with them
-        else{ //counter == 3
-            response1 = "CHAT";
-            System.out.println("Request accepted! Go ahead and chat with " +recipient);
-        }
-
-        //are able to chat with them
-        /*else if(counter2 == 2 || counter2 == 0){
-            response1 = "CHAT";
-            System.out.println("Okay! Go ahead and start sending messages to " + recipient);
-        }*/
 
         array[0] = recipient;
         array[1] = response1;
@@ -680,37 +662,6 @@ public class Client {
         return responseHandlerReturn;
 
     }
-
-
-    public Vector ResponseHandler2(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Client client, String response1, Vector alreadychatting, Scanner scan, boolean firstOnlineUser) throws IOException {
-
-        String recipient = null;
-        String response2 = null;
-        boolean validResponse = false;
-        String[] chatReturn;
-        Vector<Object> responseHandlerReturn = new Vector<>();
-        //0: recipient
-        //1: response1
-        //2: validresponse
-
-        if (response1.equals("ANOTHER")) {
-            //validResponse = fa
-        } else if (response1.equals("THEM")) {
-
-        } else {
-            System.out.println("please enter a valid response [THEM | ANOTHER]");
-            response1 = scan.next();
-            validResponse = false;
-        }
-
-        responseHandlerReturn.add(0, recipient);
-        responseHandlerReturn.add(1, response1);
-        responseHandlerReturn.add(2, validResponse);
-
-        return responseHandlerReturn;
-
-    }
-
 
 
 }
