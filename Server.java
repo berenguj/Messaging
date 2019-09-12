@@ -159,6 +159,10 @@ public class Server {
 
                                 System.out.println("already chatting after: " + alreadychatting);
                             }
+
+                            if(counter2 == 1){ //they are already chatting with someone
+                                stepCount = 3; //send them to stepCount == 4
+                            }
                         }
                     }
                     else if(stepCount == 3){ //give the notification to the recipient that someone wants to chat with them
@@ -175,30 +179,40 @@ public class Server {
                             }
                         }
 
-                        //add name to the vector of people who are recieving notificaitons
-                        //usersWithNotifications.add(recipient);
-
-                        /*String friendresponse = dataInputStream.readUTF();
-                        System.out.println("friend response: " +friendresponse);
-                        if(friendresponse.equals("YES") || friendresponse.equals("NO")){
-                            System.out.println("do i ever get to here?");
-                            dataOutputStream.writeUTF(friendresponse);
-                        }
-                        else{
-                            //search for recipient in list
-                            for (ClientHandler mc : Server.clients) {
-
-                                //if recipient found, write on its output stream
-                                if (mc.name.equals(recipient) && mc.loggedin) {
-                                    mc.dataOutputStream.writeUTF("Please enter a valid response [YES | NO]");
-                                    break;
-                                }
-                            }
-                        }*/
-
                     }
                     else if(stepCount == 4){ //they just tried talking to someone who is already chatting and needs to choose someone who isn't already chatting
+                        System.out.println("i am in stepcount 4");
+                        while(counter2 == 1){ //not too sure why i put a while loop here
+                            recipient = dataInputStream.readUTF();
+                            System.out.println("recipient recieved in stepcount == 4: " + recipient);
+                            counter2 = 0; //need to reset counter2
 
+                            //check who is chatting with each other already
+                            //check if they are already chatting with someone or chose to already chat with you
+                            for (int i = 0; i < alreadychatting.size(); i++) {
+                                if ((alreadychatting.get(i).equals(name) && alreadychatting.get(i + 1).equals(recipient)) || (alreadychatting.get(i).equals(recipient) && alreadychatting.get(i + 1).equals(name))) {
+                                    counter2 += 2;
+                                } else if (alreadychatting.get(i).equals(name) || alreadychatting.get(i).equals(recipient) || alreadychatting.get(i + 1).equals(name) || alreadychatting.get(i + 1).equals(recipient)) {
+                                    counter2++;
+                                }
+                                i += 2;
+                            }
+
+                            System.out.println("counter2: " + counter2);
+                            dataOutputStream.writeUTF(Integer.toString(counter2));
+
+                            if (counter2 == 2 || counter2 == 0) {
+
+                                //add them to the already chatting vector
+                                if (counter2 == 0) {
+                                    alreadychatting.add(name);
+                                    alreadychatting.add(recipient);
+                                }
+
+                                System.out.println("already chatting after: " + alreadychatting);
+                            }
+
+                        }
                     }
                     else{
                         //receive string

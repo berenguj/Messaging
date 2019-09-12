@@ -442,9 +442,6 @@ public class Client {
                 System.out.println("already chtting size: " +alreadychatting.size());
                 System.out.println("Who would you like to chat with?");
                 recipient = scan.next();
-                //give recipient to server
-                dataOutputStream.writeUTF(recipient);
-                System.out.println("i wrote recipient to server");
 
                 //check if they're online
                 int onlineCount = 0;
@@ -486,6 +483,10 @@ public class Client {
                     line = reader2.readLine();
                 }
 
+                //give recipient to server
+                dataOutputStream.writeUTF(recipient);
+                System.out.println("i wrote recipient to server");
+
                 //at this point the server will send back data on counter2, indicating if someone is chatting with someone else
                 counter2 = Integer.parseInt(dataInputStream.readUTF());
                 System.out.println("counter2: " +counter2);
@@ -498,26 +499,53 @@ public class Client {
                     }
                 }
                 else if(counter2 == 1){ //they are already chatting with someone
-                    System.out.println("Sorry they are already chatting with another friend!" +
-                            " Did you want to send them messages that they can view later or chat with someone else? [THEM | ANOTHER]");
-                    response1 = scan.next();
-                    System.out.println("response1: " +response1);
 
-                    while(!validResponse){
-                        if (response1.equals("ANOTHER")) {
-                            //display friends list
-                            validResponse = true;
+                        System.out.println("Sorry they are already chatting with another friend!" +
+                                " Did you want to send them messages that they can view later or chat with someone else? [THEM | ANOTHER]");
+                        response1 = scan.next();
+                        System.out.println("response1: " +response1);
+
+                        while(!validResponse){
+                            if(response1.equals("ANOTHER")) {
+                                //display friends list overallresponse == false
+                                validResponse = true;
+                                while(counter2 == 1){
+                                    //display friends list
+                                    System.out.println("Please choose another friend. They are already chatting with someone else.");
+                                    Iterator anotheronlinevalue = onlineFriends.iterator();
+                                    Iterator anotherofflinevalue = offlineFriends.iterator();
+                                    while(anotheronlinevalue.hasNext()){
+                                        System.out.println(anotheronlinevalue.next() + ": online");
+                                    }
+                                    while(anotherofflinevalue.hasNext()){
+                                        System.out.println(anotherofflinevalue.next() + ": offline");
+                                    }
+                                    //get recipient
+                                    System.out.println("Who would you like to chat with?");
+                                    recipient = scan.next();
+                                    //send recipient
+                                    dataOutputStream.writeUTF(recipient);
+                                    //get counter2 back if its 1 keep asking
+                                    counter2 = Integer.parseInt(dataInputStream.readUTF());
+                                    System.out.println("counter 2 in another: " +counter2);
+                                    if(counter2 != 1){ //not already chatting with someone
+                                        break;
+                                    }
+                                    //if not exit while
+                                }
+                                System.out.println("i broke out of while loop");
+                            }
+                            else if(response1.equals("THEM")){
+                                System.out.println("Okay! Go ahead and start sending messages to " + recipient + ". She will see them later when she wants to chat with you!");
+                                validResponse = true;
+                            }
+                            else{
+                                System.out.println("Please input a valid response [THEM | ANOTHER]");
+                                response1 = scan.next();
+                            }
                         }
-                        else if(response1.equals("THEM")){
-                            System.out.println("Okay! Go ahead and start sending messages to " + recipient + ". She will see them later when she wants to chat with you!");
-                            validResponse = true;
-                        }
-                        else{
-                            System.out.println("Please input a valid response [THEM | ANOTHER]");
-                            response1 = scan.next();
-                        }
-                    }
-                    validResponse = false;
+                        validResponse = false;
+
                 }
 
                 //send a notification to the friend saying they want to chat with them
