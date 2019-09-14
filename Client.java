@@ -361,12 +361,13 @@ public class Client {
                     }
                     notifline = notifreader.readLine();
                 }
+                System.out.println("havenotification: " +haveNotification);
                 //check if they are the first person online or else there will be no notifications to read
                 //probs won't need this later
                 if(firstOnlineUser){
                     System.out.println("No notifications. You can now choose who you'd like to chat with.");
                 }
-                if(haveNotification){
+                else if(haveNotification){
                     //now check for notifications
                     //System.out.println("data input stream: " + dataInputStream.readUTF());
                     notification = dataInputStream.readUTF();
@@ -488,13 +489,13 @@ public class Client {
                     line = reader2.readLine();
                 }
 
-                //give recipient to server
-                dataOutputStream.writeUTF(recipient);
-                System.out.println("i wrote recipient to server");
-                System.out.println("counter2 at this point: " +counter2);
-                System.out.println("recipient at this point: " +recipient);
-
                 if(!skipNotifications){
+                    //give recipient to server
+                    dataOutputStream.writeUTF(recipient);
+                    System.out.println("i wrote recipient to server");
+                    System.out.println("counter2 at this point: " +counter2);
+                    System.out.println("recipient at this point: " +recipient);
+
                     //at this point the server will send back data on counter2, indicating if someone is chatting with someone else
                     counter2 = Integer.parseInt(dataInputStream.readUTF());
                     System.out.println("counter2: " +counter2);

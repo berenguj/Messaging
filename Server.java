@@ -115,9 +115,10 @@ public class Server {
                     else if(stepCount == 2) { //obtain recipient and see if they are already chatting with someone or see if they got a notification
                         System.out.println("i am in stepcount 2");
                         recipient = dataInputStream.readUTF();
+                        System.out.println("recipient in stepcount == 2: " +recipient);
 
                         if(recipient.equals("notification")) {
-                            stepCount += 1; //skips stepcount == 3
+                            stepCount += 3; //skips stepcount == 3 and 4
                             //get the name of the person who sent the notification
                             recipient = dataInputStream.readUTF();
                             System.out.println("recipient after: " + recipient);
@@ -200,19 +201,24 @@ public class Server {
 
                             System.out.println("counter2: " + counter2);
                             dataOutputStream.writeUTF(Integer.toString(counter2));
-
-                            if (counter2 == 2 || counter2 == 0) {
-
-                                //add them to the already chatting vector
-                                if (counter2 == 0) {
-                                    alreadychatting.add(name);
-                                    alreadychatting.add(recipient);
-                                }
-
-                                System.out.println("already chatting after: " + alreadychatting);
-                            }
-
                         }
+
+                        //need to send notification to recipient
+                        received = dataInputStream.readUTF();
+                        System.out.println("recieved in stepcount == 4: " +received);
+
+                        //search for recipient in list
+                        for (ClientHandler mc : Server.clients) {
+                            //if recipient found, write on its output stream
+                            if (mc.name.equals(recipient) && mc.loggedin) {
+                                mc.dataOutputStream.writeUTF(received);
+                                break;
+                            }
+                        }
+
+                        //need to add them to alreadychatting after accepting
+
+
                     }
                     else{
                         //receive string
