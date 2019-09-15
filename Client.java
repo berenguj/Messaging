@@ -80,7 +80,7 @@ public class Client {
                 }
             }
             line = null;
-            System.out.println("existing user:" +existingUser);
+            //System.out.println("existing user:" +existingUser);
 
             //login an existing user
             while(!initialLogin) {
@@ -162,7 +162,6 @@ public class Client {
                             }
                         }
                     }
-                    System.out.println("firstonlineuser: " +firstOnlineUser);
 
                 } else if (!existingUser && signupORlogin.equals("LOGIN")) {
                     System.out.println("Sorry that username does not exist. Please type in the correct username.");
@@ -361,7 +360,6 @@ public class Client {
                     }
                     notifline = notifreader.readLine();
                 }
-                System.out.println("havenotification: " +haveNotification);
                 //check if they are the first person online or else there will be no notifications to read
                 //probs won't need this later
                 if(firstOnlineUser){
@@ -392,6 +390,25 @@ public class Client {
                                     friendResponse = scan.next();
                                 }
                             }
+                            //remove from userswithnotifications txt file
+                            File onlineUsers = new File("usersWithNotifications.txt");
+                            File tempFile = new File("tempFile.txt");
+
+                            BufferedReader reader = new BufferedReader(new FileReader(onlineUsers));
+                            BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+                            String userToRemove = name;
+                            String currentLine;
+
+                            while((currentLine = reader.readLine()) != null) {
+                                // trim newline when comparing with lineToRemove
+                                String trimmedLine = currentLine.trim();
+                                if(trimmedLine.equals(userToRemove)) continue;
+                                writer.write(currentLine + System.getProperty("line.separator"));
+                            }
+                            writer.close();
+                            reader.close();
+                            boolean successful = tempFile.renameTo(onlineUsers);
                         }
                     }
                 }
@@ -400,7 +417,7 @@ public class Client {
                 }
             }
 
-            if(counter2 != 3){
+            if(counter2 != 3) {
                 //displaying friend's list with online status
                 BufferedReader reader1 = new BufferedReader(new FileReader(filename));
                 String line = reader1.readLine(); //skip two lines so it doesn't show the password
@@ -412,70 +429,41 @@ public class Client {
                     friend = line;
                     BufferedReader reader2 = new BufferedReader(new FileReader("onlineUsers.txt"));
                     String line2;
-                    while((line2 = reader2.readLine()) != null){
-                        if(line2.equals(friend)){
+                    while ((line2 = reader2.readLine()) != null) {
+                        if (line2.equals(friend)) {
                             onlineFriends.add(friend);
                         }
                     }
                     Iterator onlinevalue = onlineFriends.iterator();
                     int friendcount = 0;
-                    while(onlinevalue.hasNext()){
-                        if(onlinevalue.next().equals(friend)){
+                    while (onlinevalue.hasNext()) {
+                        if (onlinevalue.next().equals(friend)) {
                             friendcount++;
                         }
                     }
-                    if(friendcount == 0) {
+                    if (friendcount == 0) {
                         offlineFriends.add(friend);
                     }
                 }
                 friend = recipient;
-                if(!skipNotifications){
-                    //System.out.println("onlinefriends: " +onlineFriends);
-                    //System.out.println("offilnefriends: " +offlineFriends);
+                if (!skipNotifications) {
+                    System.out.println("onlinefriends: " +onlineFriends);
+                    System.out.println("offilnefriends: " +offlineFriends);
                     Iterator onlinevalue = onlineFriends.iterator();
                     Iterator offlinevalue = offlineFriends.iterator();
                     System.out.println("Here is your friends list and who is online: \n");
-                    while(onlinevalue.hasNext()){
+                    while (onlinevalue.hasNext()) {
                         System.out.println(onlinevalue.next() + ": online");
                     }
-                    while(offlinevalue.hasNext()){
+                    while (offlinevalue.hasNext()) {
                         System.out.println(offlinevalue.next() + ": offline");
                     }
 
                     //getting user input
-                    System.out.println("already chatting before: " +alreadychatting);
-                    System.out.println("already chtting size: " +alreadychatting.size());
+                    System.out.println("already chatting before: " + alreadychatting);
+                    System.out.println("already chtting size: " + alreadychatting.size());
                     System.out.println("Who would you like to chat with?");
                     recipient = scan.next();
-                }
-
-                //check if they're online
-                int onlineCount = 0;
-                Iterator onlinevalue2 = onlineFriends.iterator();
-                while(onlinevalue2.hasNext()){
-                    if(onlinevalue2.next().equals(recipient)){
-                        //dataOutputStream.writeUTF(recipient); //give recipient name to server
-                        onlineCount = 0;
-                        break;
-                    }
-                    else{
-                        onlineCount++;
-                    }
-                }
-                while(onlineCount != 0){
-                    System.out.println("Sorry they're currently offline! Please type the name of a friend that is online: ");
-                    recipient = scan.next();
-                    Iterator onlinevalue3 = onlineFriends.iterator();
-                    while(onlinevalue3.hasNext()){
-                        if(onlinevalue3.next().equals(recipient)){
-                            dataOutputStream.writeUTF(recipient);
-                            onlineCount = 0;
-                            break;
-                        }
-                        else{
-                            onlineCount++;
-                        }
-                    }
                 }
 
                 //check if they are friends with them
@@ -488,12 +476,64 @@ public class Client {
                     }
                     line = reader2.readLine();
                 }
+                while (counter1 == 0) {
+                    System.out.println("Sorry you're not friends with them! Please choose someone you are friends with: ");
+                    Iterator anotheronlinevalue = onlineFriends.iterator();
+                    Iterator anotherofflinevalue = offlineFriends.iterator();
+                    while (anotheronlinevalue.hasNext()) {
+                        System.out.println(anotheronlinevalue.next() + ": online");
+                    }
+                    while (anotherofflinevalue.hasNext()) {
+                        System.out.println(anotherofflinevalue.next() + ": offline");
+                    }
+                    System.out.println("Who would you like to chat with?");
+                    recipient = scan.next();
+
+                    //check if they are friends with them
+                    BufferedReader readerforfriend = new BufferedReader(new FileReader(filename));
+                    line = readerforfriend.readLine();
+                    while (line != null) {
+                        line = line.replaceAll("\\s+", "");
+                        if (recipient.equals(line)) { //friend is in the list
+                            counter1++;
+                        }
+                        line = readerforfriend.readLine();
+                    }
+                }
+
+                //check if they're online
+                int onlineCount = 0;
+                Iterator onlinevalue2 = onlineFriends.iterator();
+                if(!onlinevalue2.hasNext()){ //no one is online
+                    onlineCount++;
+                }
+                while (onlinevalue2.hasNext()) {
+                    if (onlinevalue2.next().equals(recipient)) {
+                        //dataOutputStream.writeUTF(recipient); //give recipient name to server
+                        onlineCount = 0;
+                        break;
+                    } else {
+                        onlineCount++;
+                    }
+                }
+                while (onlineCount != 0) {
+                    System.out.println("Sorry they're currently offline! Please type the name of a friend that is online: ");
+                    recipient = scan.next();
+                    Iterator onlinevalue3 = onlineFriends.iterator();
+                    while (onlinevalue3.hasNext()) {
+                        if (onlinevalue3.next().equals(recipient)) {
+                            onlineCount = 0;
+                            break;
+                        } else {
+                            onlineCount++;
+                        }
+                    }
+                }
 
                 if(!skipNotifications){
                     //give recipient to server
                     dataOutputStream.writeUTF(recipient);
                     System.out.println("i wrote recipient to server");
-                    System.out.println("counter2 at this point: " +counter2);
                     System.out.println("recipient at this point: " +recipient);
 
                     //at this point the server will send back data on counter2, indicating if someone is chatting with someone else
@@ -501,14 +541,7 @@ public class Client {
                     System.out.println("counter2: " +counter2);
                 }
 
-                if (counter1 == 0) { //counter didn't increase
-                    System.out.println("Sorry you're not friends with them! Did you want to add them or chat with a different friend? [ADD | CHAT | LOGOUT]");
-                    response1 = scan.next();
-                    if (response1.equals("CHAT")) {
-                        response1 = "CHATDISP"; //CHATDISP: display friends list and ask who they want to chat with
-                    }
-                }
-                else if(counter2 == 1){ //they are already chatting with someone
+                if(counter2 == 1){ //they are already chatting with someone
 
                     System.out.println("Sorry they are already chatting with another friend!" +
                             " Did you want to send them messages that they can view later or chat with someone else? [THEM | ANOTHER]");
@@ -535,15 +568,16 @@ public class Client {
                                 recipient = scan.next();
                                 //send recipient
                                 dataOutputStream.writeUTF(recipient);
+                                System.out.println("just sent recipient");
                                 //get counter2 back if its 1 keep asking
                                 counter2 = Integer.parseInt(dataInputStream.readUTF());
-                                System.out.println("counter 2 in another: " +counter2);
+                                //System.out.println("counter 2 in another: " +counter2);
                                 if(counter2 != 1){ //not already chatting with someone
                                     break;
                                 }
                                 //if not exit while
                             }
-                            System.out.println("i broke out of while loop");
+                           // System.out.println("i broke out of while loop");
                             skipNotifications = true;
                         }
                         else if(response1.equals("THEM")){
@@ -573,7 +607,6 @@ public class Client {
                     //retrieve their response
                     System.out.println("Waiting for " + recipient + "'s response..");
                     friendResponse = dataInputStream.readUTF();
-                    System.out.println("friendresponse: " +friendResponse);
                     String sendChatResponse = "";
                     String unreadmsgs = "";
                     boolean sendChat = false;
