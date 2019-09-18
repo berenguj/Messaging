@@ -207,7 +207,7 @@ public class Client {
             //responseHandlerReturn = server.ResponseHandler(dataOutputStream, dataInputStream, name, server, response1);
             while (!validResponse) {
 
-                responseHandlerReturn = client.ResponseHandler1(dataOutputStream, dataInputStream, name, client, response1, alreadychatting, scan, firstOnlineUser);
+                responseHandlerReturn = client.ResponseHandler1(dataOutputStream, dataInputStream, name, client, response1, alreadychatting, scan, firstOnlineUser, socket);
                 validResponseObject = responseHandlerReturn.get(2);
                 validResponse = (boolean) validResponseObject;
                 recipientObject = responseHandlerReturn.get(0);
@@ -329,7 +329,7 @@ public class Client {
         return response1;
     }
 
-    public String[] CHAT(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Vector alreadychatting, Scanner scan, boolean firstOnlineUser, Client client) throws IOException, ParseException {
+    public String[] CHAT(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Vector alreadychatting, Scanner scan, boolean firstOnlineUser, Client client, Socket socket) throws IOException, ParseException {
         String[] array = new String[2];
         String recipient = ""; //0 in array
         String response1 = "CHAT"; //1 in array
@@ -421,29 +421,50 @@ public class Client {
                     }
                 }
                 else if(haveUnreadMessage){
+                    String sender = "";
                     //check the dates & times to get latest messages
                     BufferedReader unreadmsgreader = new BufferedReader(new FileReader(name + "unread.txt")); //password will be the very first line of their text file followed by their friends list
                     String unreadmsgline = unreadmsgreader.readLine();
-                    SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+                    SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
                     Date currdate;
-                    Date latestdate = sdf.parse("01/01/2019");
+                    Date latestdate = sdf.parse("01/01/2019 00:00:00");
                     while(unreadmsgline != null){
                         if(unreadmsgline.charAt(0) == '0' || unreadmsgline.charAt(0) == '1'){ //hit a line with a date and time
                             currdate = sdf.parse(unreadmsgline);
                             if(currdate.compareTo(latestdate) > 0){
                                 //currdate is after latestdate
                                 latestdate = currdate;
+                                //get the name of the sender
+                                sender = unreadmsgreader.readLine();
                             }
                         }
                         unreadmsgline = notifreader.readLine();
                     }
+                    String strDate = sdf.format(latestdate);
 
                     //get the sender's name
-                    System.out.println("You have unread messages from ");
+                    System.out.println("You have unread messages from " + sender +": ");
                     //print the messages
-                    //delete them from users with unreadmessages txt file
+                    BufferedReader unreadmsgreader2 = new BufferedReader(new FileReader(name + "unread.txt")); //password will be the very first line of their text file followed by their friends list
+                    String unreadmsgline2 = unreadmsgreader2.readLine();
+                    while(unreadmsgline2 != null){
+                        if(unreadmsgline2.equals(strDate)){
+                            //print the messages after the sender's name
+                            unreadmsgreader2.readLine(); //skip sender's name line
+                            unreadmsgline2 = unreadmsgreader2.readLine();
+                            while(!unreadmsgline2.equals("LOGOUT")){
+                                System.out.println(unreadmsgline2);
+                                unreadmsgline2 = unreadmsgreader2.readLine();
+                            }
+                            break;
+                        }
+                    }
+                    counter2 = 4;
 
-                    //remove from online users txt file
+                    //mark messages as READ
+                    //maybe don't need to do this because they always read the latest messages..
+
+                    //delete them from users with unreadmessages txt file
                     File unreadUsers = new File("usersWithUnreadMsgs.txt");
                     File tempFile = new File("tempFile.txt");
 
@@ -456,14 +477,12 @@ public class Client {
                     while((currentLine = reader.readLine()) != null) {
                         // trim newline when comparing with lineToRemove
                         String trimmedLine = currentLine.trim();
-                        if(trimmedLine.equals(userToRemove)) continue;
+                        if (trimmedLine.equals(userToRemove)) continue;
                         writer.write(currentLine + System.getProperty("line.separator"));
                     }
                     writer.close();
                     reader.close();
                     boolean successful = tempFile.renameTo(unreadUsers);
-
-                    //mark unread msgs as 'READ'
                 }
                 else{
                     System.out.println("No notifications. You can now choose who you'd like to chat with.");
@@ -471,6 +490,7 @@ public class Client {
             }
 
             if(counter2 != 3) {
+                System.out.println("hehe");
                 //displaying friend's list with online status
                 BufferedReader reader1 = new BufferedReader(new FileReader(filename));
                 String line = reader1.readLine(); //skip two lines so it doesn't show the password
@@ -500,8 +520,8 @@ public class Client {
                 }
                 friend = recipient;
                 if (!skipNotifications) {
-                    System.out.println("onlinefriends: " +onlineFriends);
-                    System.out.println("offilnefriends: " +offlineFriends);
+                    //System.out.println("onlinefriends: " +onlineFriends);
+                    //System.out.println("offilnefriends: " +offlineFriends);
                     Iterator onlinevalue = onlineFriends.iterator();
                     Iterator offlinevalue = offlineFriends.iterator();
                     System.out.println("Here is your friends list and who is online: \n");
@@ -635,7 +655,7 @@ public class Client {
                         }
                         else if(response1.equals("THEM")){
                             System.out.println("Okay! Go ahead and start sending messages to " + recipient + ". She will see them later when she wants to chat with you!" +
-                                    "After you're done sending one message, press enter. You can keep sending other messages in the same way. When you're done sending messages, please 'LOGOUT'.");
+                                    " After you're done sending one message, press enter. You can keep sending other messages in the same way. When you're done sending messages, please 'LOGOUT'.");
                             validResponse = true;
                             String unreadmsg = "";
                             //write the date and time the msg was sent and who sent it
@@ -647,18 +667,28 @@ public class Client {
                             writer.newLine();
                             writer.write(name);
                             writer.newLine();
-                            writer.flush();
-                            writer.close();
                             //append the msgs
                             while(!unreadmsg.equals("LOGOUT")){
-                                unreadmsg = scan.next();
+                                unreadmsg = scan.nextLine();
+                                System.out.println("unreadmsg: " +unreadmsg);
                                 writer.write(unreadmsg);
                                 writer.newLine();
-                                writer.flush();
-                                writer.close();
                             }
+                            writer.flush();
+                            writer.close();
+                            //add te recipient to userswithunreadmsgs.txt
+                            BufferedWriter unreadwriter = new BufferedWriter(new FileWriter("usersWithUnreadMsgs.txt", true));
+                            unreadwriter.write(recipient);
+                            unreadwriter.newLine();
+                            unreadwriter.flush();
+                            unreadwriter.close();
                             //will end up sending 'LOGOUT' to stepcount 4
                             dataOutputStream.writeUTF("LOGOUT");
+                            overallResponse = true;
+                            System.out.println("you are now logged out!");
+                            dataInputStream.close();
+                            dataOutputStream.close();
+                            socket.close();
                         }
                         else{
                             System.out.println("Please input a valid response [THEM | ANOTHER]");
@@ -753,7 +783,7 @@ public class Client {
         return array;
     }
 
-    public Vector ResponseHandler1(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Client client, String response1, Vector alreadychatting, Scanner scan, boolean firstOnlineUser) throws IOException, ParseException {
+    public Vector ResponseHandler1(DataOutputStream dataOutputStream, DataInputStream dataInputStream, String name, Client client, String response1, Vector alreadychatting, Scanner scan, boolean firstOnlineUser, Socket socket) throws IOException, ParseException {
 
         String recipient = null;
         String response2 = null;
@@ -778,7 +808,7 @@ public class Client {
                 validResponse = false;
             }
         } else if (response1.equals("CHAT")) {
-            chatReturn = client.CHAT(dataOutputStream, dataInputStream, name, alreadychatting, scan, firstOnlineUser, client);
+            chatReturn = client.CHAT(dataOutputStream, dataInputStream, name, alreadychatting, scan, firstOnlineUser, client, socket);
             response2 = chatReturn[1];
             if (response2.equals("ADD")) {
                 response1 = response2;

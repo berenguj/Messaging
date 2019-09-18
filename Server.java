@@ -102,6 +102,7 @@ public class Server {
         public void run() {
             String received = "";
             String toreturn;
+            boolean logoutEarly = false;
             while (!received.equals("LOGOUT")) {
                 try {
                     stepCount++;
@@ -180,12 +181,19 @@ public class Server {
                             }
                         }
 
+                        stepCount++; //stepcount == 5
+
                     }
                     else if(stepCount == 4){ //they just tried talking to someone who is already chatting and needs to choose someone who isn't already chatting
                         System.out.println("i am in stepcount 4");
-                        while(counter2 == 1){ //not too sure why i put a while loop here
+                        while(counter2 == 1){
                             recipient = dataInputStream.readUTF();
                             System.out.println("recipient recieved in stepcount == 4: " + recipient);
+                            if(recipient.equals("LOGOUT")){ //they sent unread msgs to someone and are logging out now
+                                logoutEarly = true;
+                                break;
+                            }
+                            logoutEarly = false;
                             counter2 = 0; //need to reset counter2
 
                             //check who is chatting with each other already
@@ -203,26 +211,32 @@ public class Server {
                             dataOutputStream.writeUTF(Integer.toString(counter2));
                         }
 
-                        //need to send notification to recipient
-                        received = dataInputStream.readUTF();
-                        System.out.println("recieved in stepcount == 4: " +received);
+                        if(!logoutEarly){
+                            //need to send notification to recipient
+                            received = dataInputStream.readUTF();
+                            System.out.println("recieved in stepcount == 4: " +received);
 
-                        //search for recipient in list
-                        for (ClientHandler mc : Server.clients) {
-                            //if recipient found, write on its output stream
-                            if (mc.name.equals(recipient) && mc.loggedin) {
-                                mc.dataOutputStream.writeUTF(received);
-                                break;
+                            //search for recipient in list
+                            for (ClientHandler mc : Server.clients) {
+                                //if recipient found, write on its output stream
+                                if (mc.name.equals(recipient) && mc.loggedin) {
+                                    mc.dataOutputStream.writeUTF(received);
+                                    break;
+                                }
                             }
+
+                            //need to add them to alreadychatting after accepting
                         }
-
-                        //need to add them to alreadychatting after accepting
-
 
                     }
                     else{
-                        //receive string
-                        received = dataInputStream.readUTF();
+                        if(logoutEarly){
+                            received = "logout";
+                        }
+                        else{
+                            //receive string
+                            received = dataInputStream.readUTF();
+                        }
 
                         //System.out.println(received);
 
